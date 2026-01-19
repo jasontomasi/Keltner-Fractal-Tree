@@ -1,0 +1,746 @@
+//@version=6
+indicator("Keltner Fractal Tree (IntuitiveNZ)", shorttitle="Keltner Fractal Tree", overlay=true)
+
+max_bars_back = 50000
+
+//─────────────────────────────────────────────
+// Inputs
+//─────────────────────────────────────────────
+ema1colour = color.new(#FF69B4, 0)
+ema2colour = color.new(#FFFF00, 0)
+ema3colour = color.new(#00FFFF, 0)
+ema4colour = color.new(#FF0000, 25)
+ema5colour = color.new(#FFFFFF, 25)
+
+ema1Kbands = color.new(#FF69B4, 25)
+ema2Kbands = color.new(#FFFF00, 25)
+ema3Kbands = color.new(#00FFFF, 25)
+ema4Kbands = color.new(#FF0000, 25)
+ema5Kbands = color.new(#FFFFFF, 25)
+
+ema1lines = color.new(#FF69B4, 50)
+ema2lines = color.new(#FFFF00, 50)
+ema3lines = color.new(#00FFFF, 50)
+ema4lines = color.new(#FF0000, 25)
+ema5lines = color.new(#FFFFFF, 25)
+
+ema1crosscolour = color.new(#FF69B4, 10)
+ema2crosscolour = color.new(#FFFF00, 10)
+ema3crosscolour = color.new(#00FFFF, 10)
+ema4crosscolour = color.new(#FF0000, 10)
+ema5crosscolour = color.new(#FFFFFF, 10)
+
+orderblockcolour1 = color.rgb(0, 255, 157)
+orderblockcolour2 = color.rgb(139, 2, 230, 0) // color.rgb(139, 2, 230, 0)
+rangeboundcolour  = color.new(#FF0000, 10)
+emacrossmarkerBorder = color.new(#66ff00, 50)
+
+// Primary Keltner timeframes
+selectedperiod  = input.timeframe("2D", "Timeframe for Keltner Calculations", options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"], group='TIMEFRAMES')
+selectedperiod2 = input.timeframe("D", "Timeframe for Trendline mapping",    options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"], group='TIMEFRAMES')
+selectedperiod3 = input.timeframe("2D", "Timeframe for K4 line",              options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"], group='TIMEFRAMES')
+selectedperiod4 = input.timeframe("2D", "Timeframe for K5 line",              options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"], group='TIMEFRAMES')
+
+
+ema1_period = input.int(47,  minval=1, maxval=365, title="K1", group='INPUTS')
+kmult1      = input.float(4.5, minval=1, maxval=365, title="K1 Multiplier", group='INPUTS')
+
+ema2_period = input.int(200, minval=1, maxval=365, title="K2", group='INPUTS')
+kmult2      = input.float(8,   minval=1, maxval=365, title="K2 Multiplier", group='INPUTS')
+
+ema3_period = input.int(86,  minval=1, maxval=365, title="K3", group='INPUTS')
+kmult3      = input.float(3.2, minval=1, maxval=365, title="K3 Multiplier", group='INPUTS')
+
+ema4_period = input.int(169,  minval=1, maxval=365, title="K4", group='INPUTS')
+kmult4      = input.float(10, minval=1, maxval=365, title="K4 Multiplier", group='INPUTS')
+
+ema5_period = input.int(35,  minval=1, maxval=365, title="K5", group='INPUTS')
+kmult5      = input.float(3.2, minval=1, maxval=365, title="K5 Multiplier", group='INPUTS')
+
+src           = input.source(close, "Source", group='INPUTS')
+atrlength     = input.int(10, minval=1, maxval=50, title="ATR Length", group='INPUTS')
+
+
+drawSRlines = input.bool(false, "Show S/R (red lines)?", group='VISUALS')
+drawSRgreen = input.bool(false, "Show S/R (green lines)?", group='VISUALS')
+drawEMAlines = input.bool(false, "Show EMA trendlines?", group='VISUALS')
+showEMACrossMarkers = input.bool(false, "Show EMA Cross Markers", group='VISUALS')
+drawKbands = input.bool(false, "Show K-bands?", group='VISUALS')
+drawEMAs = input.bool(false, "Show EMAs?", group='VISUALS')
+drawShifties = input.bool(false, "Show Shifties?", group='VISUALS')
+
+
+//earningsReportDays = input.bool(false, "Include Earnings report days?", minval=0.0, maxval=100, group='INPUTS')
+useWicksForAllBandCheck = input.bool(false, "Check wicks when peeking above all K-bands?")
+
+// K33 crossovers
+dc_draw_boxes = input.bool(false, "Draw S/R Zones?")
+dc_box_color  = input.color(color.new(#ff0000, 50), "Box Fill Color")
+dc_box_border = input.color(color.new(#ffd000, 0),  "Box Border Color")
+dc_box_mode   = input.string("Chart", "Crossover Box Mode", options=["Chart", "HTF", "Both"])
+
+
+dojiPct          = input.float(95.0, "Doji detection: wick size (%)",      minval=0.0, maxval=99.0)
+dojiSizeMult     = input.float(0.0,  "Doji detection: size multiplier",    minval=0.0, maxval=4.0)
+dojiTolerancePct = input.float(0.0,  "Doji Intersection Tolerance (%)",    minval=0.0, step=0.01, maxval=10.0)
+
+dojiTF1   = input.timeframe("D", "Doji Timeframe #1", options=["60","240","D","2D","W","M","12M"])
+showDoji1 = input.bool(false, "Show Doji Set #1", group='VISUALS')
+
+
+// ─ DOJI ZONES & MARKERS ADD-ON INPUTS ─
+showDojiMarkers  = input.bool(false,  "Show Doji Markers")
+dojiZoneColor1   = input.color(color.new(color.fuchsia, 50), "Doji Zone #1 Color")
+dojiZoneColor2   = input.color(color.new(color.aqua,    50), "Doji Zone #2 Color")
+dojiMarkerColor1 = input.color(color.new(color.fuchsia,  0), "Doji Marker #1 Color")
+dojiMarkerColor2 = input.color(color.new(color.aqua,     0), "Doji Marker #2 Color")
+
+// Gap detection candles (always use selectedperiod)
+//─────────────────────────────────────────────
+gapOpen  = request.security(syminfo.tickerid, selectedperiod, open,  lookahead=barmerge.lookahead_off)
+gapClose = request.security(syminfo.tickerid, selectedperiod, close, lookahead=barmerge.lookahead_off)
+
+// Doji periods (HTF candles)
+//─────────────────────────────────────────────
+p1_Open  = request.security(syminfo.tickerid, dojiTF1, open,  lookahead=barmerge.lookahead_off)
+p1_Close = request.security(syminfo.tickerid, dojiTF1, close, lookahead=barmerge.lookahead_off)
+p1_High  = request.security(syminfo.tickerid, dojiTF1, high,  lookahead=barmerge.lookahead_off)
+p1_Low   = request.security(syminfo.tickerid, dojiTF1, low,   lookahead=barmerge.lookahead_off)
+p1_Time  = request.security(syminfo.tickerid, dojiTF1, time,  lookahead = barmerge.lookahead_off)
+
+// For SR zone boxes
+htfIndex = request.security(syminfo.tickerid, selectedperiod2, bar_index, lookahead=barmerge.lookahead_off)
+htfOpen  = request.security(syminfo.tickerid, selectedperiod2, open,      lookahead=barmerge.lookahead_off)
+htfClose = request.security(syminfo.tickerid, selectedperiod2, close,     lookahead=barmerge.lookahead_off)
+
+
+//─────────────────────────────────────────────
+// Keltner function
+//─────────────────────────────────────────────
+f_kc(_src, _emaLen, _atrLen, _mult) =>
+    basis = ta.ema(_src, _emaLen)
+    atrVal = ta.atr(_atrLen)
+    upper = basis + _mult * atrVal
+    lower = basis - _mult * atrVal
+    [basis, upper, lower]
+
+//─────────────────────────────────────────────
+// Retrieve Keltner sets (primary W + 2D)
+//─────────────────────────────────────────────
+[K1EMA, K1Upper, K1Lower] = request.security(syminfo.tickerid, selectedperiod,  f_kc(close, ema1_period, atrlength, kmult1), lookahead=barmerge.lookahead_off)
+[K2EMA, K2Upper, K2Lower] = request.security(syminfo.tickerid, selectedperiod,  f_kc(close, ema2_period, atrlength, kmult2), lookahead=barmerge.lookahead_off)
+[K3EMA, K3Upper, K3Lower] = request.security(syminfo.tickerid, selectedperiod,  f_kc(close, ema3_period, atrlength, kmult3), lookahead=barmerge.lookahead_off)
+[K4EMA, K4Upper, K4Lower] = request.security(syminfo.tickerid, selectedperiod3, f_kc(close, ema4_period, atrlength, kmult4), lookahead=barmerge.lookahead_off)
+[K5EMA, K5Upper, K5Lower] = request.security(syminfo.tickerid, selectedperiod4, f_kc(close, ema5_period, atrlength, kmult5), lookahead=barmerge.lookahead_off)
+
+[K11EMA, K11Upper, K11Lower] = request.security(syminfo.tickerid, selectedperiod2, f_kc(close, ema1_period, atrlength, kmult1), lookahead=barmerge.lookahead_off)
+[K22EMA, K22Upper, K22Lower] = request.security(syminfo.tickerid, selectedperiod2, f_kc(close, ema2_period, atrlength, kmult2), lookahead=barmerge.lookahead_off)
+[K33EMA, K33Upper, K33Lower] = request.security(syminfo.tickerid, selectedperiod2, f_kc(close, ema3_period, atrlength, kmult3), lookahead=barmerge.lookahead_off)
+
+
+
+//─────────────────────────────────────────────
+// Extra K3-based Keltner sets for D, 4H, M (multi-HTF broad match)
+//─────────────────────────────────────────────
+[K3D_EMA,  K3D_Upper,  K3D_Lower]  = request.security(syminfo.tickerid, "D",   f_kc(close, ema3_period, atrlength, kmult3), lookahead=barmerge.lookahead_off)
+[K34H_EMA, K34H_Upper, K34H_Lower] = request.security(syminfo.tickerid, "240", f_kc(close, ema3_period, atrlength, kmult3), lookahead=barmerge.lookahead_off)
+[K3M_EMA,  K3M_Upper,  K3M_Lower]  = request.security(syminfo.tickerid, "M",   f_kc(close, ema3_period, atrlength, kmult3), lookahead=barmerge.lookahead_off)
+
+//─────────────────────────────────────────────
+// Plot Keltner channels
+//─────────────────────────────────────────────
+plot(K1EMA,   color=ema1colour,  title="K1 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K1Upper, color=ema1Kbands,  title="K1 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
+plot(K1Lower, color=ema1Kbands,  title="K1 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
+
+plot(K2EMA,   color=ema2colour,  title="K2 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K2Upper, color=ema2Kbands,  title="K2 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
+plot(K2Lower, color=ema2Kbands,  title="K2 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
+
+plot(K3EMA,   color=ema3colour,  title="K3 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K3Upper, color=ema3Kbands,  title="K3 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
+plot(K3Lower, color=ema3Kbands,  title="K3 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
+
+// The snake
+plot(K4EMA,   color=ema4colour,  title="K4 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K4Upper, color=ema4Kbands,  title="K4 Upper", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+plot(K4Lower, color=ema4Kbands,  title="K4 Lower", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+
+plot(K5EMA,   color=ema5colour,  title="K5 EMA",  linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K5Upper, color=ema5Kbands,  title="K5 Upper", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+plot(K5Lower, color=ema5Kbands,  title="K5 Lower", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+
+// 2D set (dotted)
+plot(K11EMA,   color=ema1colour,  title="K11 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K11Upper, color=ema1Kbands,  title="K11 Upper", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+plot(K11Lower, color=ema1Kbands,  title="K11 Lower", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+
+plot(K22EMA,   color=ema2colour,  title="K22 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K22Upper, color=ema2Kbands,  title="K22 Upper", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+plot(K22Lower, color=ema2Kbands,  title="K22 Lower", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+
+plot(K33EMA,   color=ema3colour,  title="K33 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K33Upper, color=ema3Kbands,  title="K33 Upper", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+plot(K33Lower, color=ema3Kbands,  title="K33 Lower", linewidth=2, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+
+
+
+//─────────────────────────────────────────────
+// EMA crossover definitions
+//─────────────────────────────────────────────
+crossEMAK1K2     = ta.cross(K1EMA, K2EMA)
+crossEMAK3K2     = ta.cross(K2EMA, K3EMA)
+crossEMAK1K3     = ta.cross(K1EMA, K3EMA)
+crossEMAK2K4     = ta.cross(K2EMA, K4EMA)
+crossEMAK2K5     = ta.cross(K2EMA, K5EMA)
+
+crossK1EMAK2top  = ta.crossover(K1EMA, K2Upper)
+crossK2EMAK1top  = ta.crossover(K2EMA, K1Upper)
+crossK1EMAK2low  = ta.crossover(K1EMA, K2Lower)
+crossK2EMAK1low  = ta.crossover(K2EMA, K1Lower)
+crossK1topK2EMA  = ta.crossover(K1Upper, K2EMA)
+crossK2topK1EMA  = ta.crossover(K2Upper, K1EMA)
+crossK1lowK2low  = ta.crossover(K1Lower, K2Lower)
+crossK2lowK1low  = ta.crossover(K2Lower, K1Lower)
+crossK1lowK2EMA  = ta.crossover(K1Lower, K2EMA)
+crossK2lowK1EMA  = ta.crossover(K2Lower, K1EMA)
+crossK1topK2top  = ta.crossover(K1Upper, K2Upper)
+crossK2topK1top  = ta.crossover(K2Upper, K1Upper)
+crossK2topK1low  = ta.crossover(K2Upper, K1Lower)
+
+crossK3topK33top  = ta.cross(K3Upper, K33Upper)
+crossK3lowK33low  = ta.cross(K3Lower, K33Lower)
+
+var int lastK2topK1top = na
+var int lastK1topK2top = na
+
+canPlotK2topK1top = na(lastK2topK1top) or (bar_index - lastK2topK1top > 6)
+canPlotK1topK2top = na(lastK1topK2top) or (bar_index - lastK1topK2top > 6)
+
+
+
+//─────────────────────────────────────────────
+// UNIVERSAL KELTNER GAP-PEEK DETECTION FOR ANY BAND PAIR
+// _o = gapOpen (HTF open)
+// _c = gapClose (HTF close)
+// _u1, _l1 = upper/lower of first band (e.g., K1Upper/K1Lower)
+// _u2, _l2 = upper/lower of second band (e.g., K2Upper/K2Lower)
+// _col = line color
+//─────────────────────────────────────────────
+f_gapPeek(_o, _c, _u1, _l1, _u2, _l2, _col) =>
+    // Combined ranges
+    upperLow  = math.min(_u1, _u2)
+    upperHigh = math.max(_u1, _u2)
+    lowerLow  = math.min(_l1, _l2)
+    lowerHigh = math.max(_l1, _l2)
+
+    // Previous-candle state
+    prevBelowBoth = _o < _u1[1] and _o < _u2[1]
+    prevAboveBoth = _c > _l1[1] and _c > _l2[1]
+
+    // Peek conditions
+    peekUp   = prevBelowBoth and _o > upperLow and _o < upperHigh
+    peekDown = prevAboveBoth and _c < lowerHigh and _c > lowerLow
+
+    // Execute drawing
+    if (peekDown and drawSRgreen)
+        lowestLower = math.min(_l1, _l2)
+        line.new(bar_index, lowestLower, bar_index+1, lowestLower, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=2)
+
+    if (peekUp and drawSRgreen)
+        highestUpper = math.max(_u1, _u2)
+        line.new(bar_index, highestUpper, bar_index+1, highestUpper, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=2)
+
+    // Return the booleans so user can react to them
+    [peekUp, peekDown]
+
+
+// Keltner gap combinations
+[peekUp1, peekDown1] = f_gapPeek(gapOpen, gapClose, K1Upper, K1Lower, K2Upper, K2Lower, orderblockcolour1)
+[peekUp2, peekDown2] = f_gapPeek(gapOpen, gapClose, K2Upper, K2Lower, K1Upper, K1Lower, orderblockcolour1)
+
+// These need refining
+//[peekUp3, peekDown3] = f_gapPeek(gapOpen, gapClose, K5Upper, K5Lower, K22Upper, K22Lower, color.new(#0084ff, 0))
+//[peekUp4, peekDown4] = f_gapPeek(gapOpen, gapClose, K22Upper, K22Lower, K5Upper, K5Lower, color.new(#0084ff, 0))
+// [peekUp5, peekDown5] = f_gapPeek(gapOpen, gapClose, K4Upper, K4Lower, K11Upper, K11Lower, color.new(#004600, 0))
+// [peekUp4, peekDown4] = f_gapPeek(gapOpen, gapClose, K22Upper, K22Lower, K5Upper, K5Lower, color.new(#0084ff, 0))
+
+
+
+//─────────────────────────────────────────────
+// EMA Cross Markers
+//─────────────────────────────────────────────
+plotK1cross = showEMACrossMarkers ? (crossEMAK1K2 ? K1EMA : na) : na
+plotK3cross = showEMACrossMarkers ? (crossEMAK3K2 ? K3EMA : na) : na
+
+plotshape(plotK1cross, title="K1 > K2 Cross", style=shape.circle, location=location.absolute, size=size.normal, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK3cross, title="K3 > K2 Cross", style=shape.circle, location=location.absolute, size=size.normal, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+
+//─────────────────────────────────────────────
+// TRENDLINE REGISTRY (for doji ↔ trendline checks)
+//─────────────────────────────────────────────
+var line[]  trendlines  = array.new_line()
+var float[] trend_yLow  = array.new_float()
+var float[] trend_yHigh = array.new_float()
+
+f_registerTrendline(ln) =>
+    y1 = line.get_y1(ln)
+    y2 = line.get_y2(ln)
+    array.push(trendlines, ln)
+    array.push(trend_yLow,  math.min(y1, y2))
+    array.push(trend_yHigh, math.max(y1, y2))
+
+//─────────────────────────────────────────────
+// HYBRID PRICE-ONLY INTERSECTION (HTF AGNOSTIC)
+//─────────────────────────────────────────────
+f_dojiIntersectsAnyTrendline(_level, tolPct) =>
+    if na(_level)
+        false
+    else
+        sz = array.size(trendlines)
+        if sz == 0
+            false
+        else
+            hit = false
+            for i = 0 to sz - 1
+                yLow  = array.get(trend_yLow,  i)
+                yHigh = array.get(trend_yHigh, i)
+                tolAbs = (yHigh - yLow) * tolPct / 100.0
+                if _level >= (yLow - tolAbs) and _level <= (yHigh + tolAbs)
+                    hit := true
+            hit
+
+//─────────────────────────────────────────────
+// Unified line-pairing function with optional mid-line
+//─────────────────────────────────────────────
+f_pairLines(int _id, bool _event, float _low, float _high, float _mid, color _col) =>
+    var int[]   firstBar   = array.new_int()
+    var float[] firstLow   = array.new_float()
+    var float[] firstHigh  = array.new_float()
+    var float[] firstMid   = array.new_float()
+
+    while array.size(firstBar) <= _id
+        array.push(firstBar,   na)
+        array.push(firstLow,   na)
+        array.push(firstHigh,  na)
+        array.push(firstMid,   na)
+
+    fb  = array.get(firstBar,  _id)
+    fl  = array.get(firstLow,  _id)
+    fh  = array.get(firstHigh, _id)
+    fm  = array.get(firstMid,  _id)
+
+    if _event
+        if na(fb)
+            array.set(firstBar,  _id, bar_index)
+            array.set(firstLow,  _id, _low)
+            array.set(firstHigh, _id, _high)
+            array.set(firstMid,  _id, _mid)
+        else
+            x1 = fb
+            x2 = bar_index
+
+            lnLow  = line.new(x1, fl, x2, _low,  xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=extend.both)
+            f_registerTrendline(lnLow)
+            lnHigh = line.new(x1, fh, x2, _high, xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=extend.both)
+            f_registerTrendline(lnHigh)
+
+            if not na(fm) and not na(_mid)
+                lnMid = line.new(x1, fm, x2, _mid, xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=extend.both)
+                f_registerTrendline(lnMid)
+
+            array.set(firstBar,  _id, na)
+            array.set(firstLow,  _id, na)
+            array.set(firstHigh, _id, na)
+            array.set(firstMid,  _id, na)
+
+crossEvent4 = ta.cross(K11EMA, K22EMA) // PERFECT
+crossEvent5 = ta.cross(K22EMA, K33EMA)
+crossEvent6 = ta.cross(K1EMA, K2EMA)
+crossEvent7 = ta.cross(K33EMA, K3EMA) or ta.cross(K33EMA, K3Upper) or ta.cross(K33EMA, K3Lower)
+crossEvent8 = ta.cross(K33EMA, K11EMA) or ta.cross(K33EMA, K11Upper) or ta.cross(K33EMA, K11Lower)
+crossEvent9 = ta.cross(K33EMA, K2EMA) or ta.cross(K33EMA, K2Upper) or ta.cross(K33EMA, K2Lower)
+
+
+if (drawEMAlines)
+    f_pairLines(0, crossEvent4, K22Lower, K22Upper, na, ema1colour)
+    f_pairLines(1, crossEvent5, K22Lower, K22Upper, na, ema3colour)
+    f_pairLines(2, crossEvent6, K2Lower, K2Upper, na, ema2colour)
+    f_pairLines(3, crossEvent8, K11Lower, K11Upper, na, ema3colour)
+    f_pairLines(4, crossEvent9, K22Lower, K22Lower, na, ema2colour)
+
+
+
+//f_pairLines(5, crossK2topK1top, K2Upper, K2Upper, na, rangeboundcolour)
+//f_pairLines(6, crossK2topK1top, K1EMA, K1EMA, na, rangeboundcolour)
+//f_pairLines(7, crossK2topK1top, K2EMA, K2EMA, na, rangeboundcolour)
+
+
+if (crossK2topK1top) and (drawSRlines) // (canPlotK2topK1top)
+    line.new(bar_index, K2Upper, bar_index + 50, K2Upper, extend=extend.right, color=rangeboundcolour, style=line.style_solid, width=2)
+    line.new(bar_index, K1EMA,   bar_index + 50, K1EMA,   extend=extend.right, color=rangeboundcolour, style=line.style_solid, width=2)
+    line.new(bar_index, K2EMA,   bar_index + 50, K2EMA,   extend=extend.right, color=rangeboundcolour, style=line.style_solid, width=2)
+    lastK2topK1top := bar_index
+
+//if (crossK2topK1low) and (not crossEMAK1K2)
+//    line.new(bar_index, K2Lower, bar_index + 10, K2Lower, extend=extend.right, color=ema2lines, style=line.style_dotted, width=1)
+
+//if (crossK1lowK2EMA and not crossEMAK1K2)
+//    line.new(bar_index, K2Upper, bar_index + 50, K2Upper, extend=extend.right, color=ema2colour, style=line.style_dotted, width=1)
+//    line.new(bar_index, K2Lower, bar_index + 50, K2Lower, extend=extend.right, color=ema2colour, style=line.style_dotted, width=1)
+//    line.new(bar_index, K1Upper, bar_index + 50, K1Upper, extend=extend.right, color=ema1colour, style=line.style_dotted, width=1)
+//    line.new(bar_index, K1Lower, bar_index + 50, K1Lower, extend=extend.right, color=ema1colour, style=line.style_dotted, width=1)
+
+
+//───────────── DOJI DETECTION ─────────────//
+// DOJI DETECTION — SET #1
+p1_body      = math.abs(p1_Close - p1_Open)
+p1_upperWick = p1_High - math.max(p1_Open, p1_Close)
+p1_lowerWick = math.min(p1_Open, p1_Close) - p1_Low
+p1_totalWick = p1_upperWick + p1_lowerWick
+p1_wickPct   = p1_body == 0 ? 100.0 : (p1_totalWick / p1_body) * 100.0
+candleDoji1  = showDoji1 and (p1_wickPct >= dojiPct)
+candleDoji2 = (p1_wickPct >= dojiPct)
+
+// Double-sized levels
+dojiDouble1 = (p1_High - p1_Low) * dojiSizeMult
+dojiMid1    = (p1_High + p1_Low) / 2.0
+dojiLevel1  = dojiMid1 + dojiDouble1
+
+
+
+dojiLevelCheck =
+      candleDoji1 ? dojiLevel1 :
+      na
+
+
+
+//─────────────────────────────────────────────
+// ALL KELTNER LEVELS (BROAD MATCH MODEL, multi-HTF)
+//─────────────────────────────────────────────
+var float[] allBands = array.new_float()
+array.clear(allBands)
+
+// W timeframe K1/K2/K3
+array.push(allBands, K1Upper)
+array.push(allBands, K1Lower)
+array.push(allBands, K2Upper)
+array.push(allBands, K2Lower)
+//array.push(allBands, K33Upper)
+//array.push(allBands, K33Lower)
+
+// RETURNS TRUE IF price crosses OR equals ANY band
+f_hitsAnyBand(_price, _bandsArray) =>
+    var bool hit = false
+    for i = 0 to array.size(_bandsArray) - 1
+        band = array.get(_bandsArray, i)
+        if ta.cross(_price, band) or (_price == band)
+            hit := true
+    hit
+
+hitsBands1 = f_hitsAnyBand(dojiLevel1, allBands)
+//hitsBands2 = f_hitsAnyBand(dojiLevel2, allBands)
+
+//dojiDoubleHitsAnyBand = hitsBands1 or hitsBands2
+dojiDoubleHitsAnyBand = hitsBands1
+// foundDoji             = (candleDoji1 or candleDoji2) and dojiDoubleHitsAnyBand
+
+
+
+//─────────────────────────────────────────────
+// TRUE HTF CROSSOVER ENGINE (zero false positives)
+//─────────────────────────────────────────────
+// We must detect crossovers ON THE HTF, not on chart TF.
+// We do this by comparing previous and current HTF values.
+var float prev_K3Upper  = na
+var float prev_K33Upper = na
+var float prev_K3Lower  = na
+var float prev_K33Lower = na
+
+// True high-level crossover detection
+trueCross_K3topK33top = not na(prev_K3Upper) and not na(prev_K33Upper) and (prev_K3Upper < prev_K33Upper and K3Upper > K33Upper or prev_K3Upper > prev_K33Upper and K3Upper < K33Upper)
+trueCross_K3lowK33low = not na(prev_K3Lower) and not na(prev_K33Lower) and (prev_K3Lower < prev_K33Lower and K3Lower > K33Lower or prev_K3Lower > prev_K33Lower and K3Lower < K33Lower)
+
+// Update HTF memory
+prev_K3Upper  := K3Upper
+prev_K33Upper := K33Upper
+prev_K3Lower  := K3Lower
+prev_K33Lower := K33Lower
+
+// Final doji + crossover condition (HTF-secure)
+foundDoji2 = (candleDoji1) and (crossK3topK33top or crossK3lowK33low)
+
+barcolor(foundDoji2 ? color.rgb(255, 0, 0) : na)
+
+
+
+// BAND ORDER CONDITION (true when K5 is outermost, K22 middle, K2 innermost)
+topSideOrder   = (K5Upper > K22Upper and K22Upper > K2Upper)
+bottomSideOrder = (K5Lower < K22Lower and K22Lower < K2Lower)
+
+// SERIES CONTROL — ensures only ONE label per continuous stretch
+var bool inWarningSeries = false
+var int warningCounter = 0
+
+// Alert flags
+var bool alertPullbackTop    = false
+var bool alertPullbackBottom = false
+
+// Email alerts (TradingView built-in)
+alertcondition(alertPullbackTop, title = "Pullback Warning (SELL)", message = "PULLBACK WARNING: SELL SIGNAL")
+alertcondition(alertPullbackBottom, title = "Pullback Warning (BUY)", message = "PULLBACK WARNING: BUY SIGNAL")
+
+// Reset alert flags each bar
+//alertPullbackTop    := false
+//alertPullbackBottom := false
+
+// ENTERING A VALID SERIES (first time condition is true)
+if (topSideOrder and not inWarningSeries)
+    // Only show label if enough warnings have accumulated
+    if warningCounter >= 1
+        label.new(bar_index, close, "* PULLBACK *", xloc=xloc.bar_index, yloc=yloc.abovebar, color=color.new(#ff0000, 0), textcolor=color.white, style=label.style_label_down, size=size.normal, text_formatting=text.format_bold)
+        inWarningSeries := true
+        alertPullbackTop := true
+        //alert("TYPE: *SELL*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
+        alert("PULLBACK_WARNING", alert.freq_all)
+
+
+if (bottomSideOrder and not inWarningSeries)
+    // Only show label if enough warnings have accumulated
+    if warningCounter >= 1
+        label.new(bar_index, close, "* PULLBACK *", xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.new(#00ff08, 0), textcolor=color.white, style=label.style_label_up, size=size.normal, text_formatting=text.format_bold)
+        inWarningSeries := true
+        alertPullbackBottom := true
+        //alert("TYPE: *BUY*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
+        alert("PULLBACK_WARNING", alert.freq_all)
+
+if (bottomSideOrder or topSideOrder) and (drawShifties) // and (candleDoji2)
+    // My shifties
+    if warningCounter < 1
+        label.new(bar_index, close, "Shifty", xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.new(#ffa600, 20), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal)
+        alertPullbackTop := true
+        alertPullbackBottom := true
+        //alert("Type: *TESTING*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
+        alert("PULLBACK_WARNING", alert.freq_all)
+
+// EXITING THE SERIES
+if not (topSideOrder or bottomSideOrder) and inWarningSeries
+    inWarningSeries := false
+
+
+
+
+//─────────────────────────────────────────────
+// Body-only imbalance detection
+//─────────────────────────────────────────────
+
+imbalanceHigh = math.max(gapOpen, gapClose)
+imbalanceLow  = math.min(gapOpen, gapClose)
+
+upperBound = math.max(K1Upper, K2Upper)
+lowerBound = math.min(K1Lower, K2Lower)
+
+imbalanceUp   = imbalanceHigh > upperBound
+imbalanceDown = imbalanceLow  < lowerBound
+isImbalance   = imbalanceUp or imbalanceDown
+
+var bool wasImbalance = false
+isFirstImbalance = isImbalance and not wasImbalance
+wasImbalance := isImbalance
+
+distToK1 = math.abs(close - K1EMA)
+distToK2 = math.abs(close - K2EMA)
+nearestEMA     = distToK1 < distToK2 ? K1EMA : K2EMA
+nearestEMAText = distToK1 < distToK2 ? "K1EMA" : "K2EMA"
+
+if (isFirstImbalance)
+    label.new(bar_index, nearestEMA, "IMBALANCE\nEquilibrium @ $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
+    line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted)
+    emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_solid)
+    line.set_extend(emaLine, extend.right)
+
+if (isFirstImbalance) and (topSideOrder or bottomSideOrder)
+    warningCounter += 1
+
+// Candle touches the EMA line when price overlaps the EMA value
+emaTouch = (low <= nearestEMA) and (high >= nearestEMA)
+
+// Reset warningCounter on EMA line hit
+if (emaTouch)
+    warningCounter := 0
+
+
+
+//─────────────────────────────────────────────────────────────
+// UNIVERSAL ABOVE/BELOW-ALL-BANDS DETECTION + LINE DRAWING
+//─────────────────────────────────────────────────────────────
+// _open  : series float – candle open (HTF or LTF)
+// _close : series float – candle close (HTF or LTF)
+// _bands : array<float> – list of levels to compare against
+// _col   : color – line color
+// _tag   : string – label for debugging (optional)
+//─────────────────────────────────────────────────────────────
+f_aboveBelowAllBands(_open, _close, _bands, _col, _tag) =>
+    bodyHigh = math.max(_open, _close)
+    bodyLow  = math.min(_open, _close)
+    aboveAll = true
+    belowAll = true
+
+    // Evaluate against ALL bands
+    for i = 0 to array.size(_bands) - 1
+        b = array.get(_bands, i)
+        if bodyHigh <= b
+            aboveAll := false
+        if bodyLow >= b
+            belowAll := false
+
+    // Draw line when condition satisfied
+    if aboveAll
+        line.new(bar_index, bodyHigh, bar_index + 1, bodyHigh, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=2)
+
+    if belowAll
+        line.new(bar_index, bodyLow, bar_index + 1, bodyLow, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=2)
+
+    // Return both conditions
+    [aboveAll, belowAll]
+
+
+
+// Array for checking against candles doing K band peeks on all bands simultaneously
+var float[] allBandsGapOut = array.new_float()
+array.clear(allBandsGapOut)
+
+array.push(allBandsGapOut, K1EMA)
+array.push(allBandsGapOut, K1Upper)
+array.push(allBandsGapOut, K1Lower)
+array.push(allBandsGapOut, K2EMA)
+array.push(allBandsGapOut, K2Upper)
+array.push(allBandsGapOut, K2Lower)
+array.push(allBandsGapOut, K3EMA)
+array.push(allBandsGapOut, K3Upper)
+array.push(allBandsGapOut, K3Lower)
+array.push(allBandsGapOut, K4EMA)
+array.push(allBandsGapOut, K4Upper)
+array.push(allBandsGapOut, K4Lower)
+array.push(allBandsGapOut, K5EMA)
+array.push(allBandsGapOut, K5Upper)
+array.push(allBandsGapOut, K5Lower)
+array.push(allBandsGapOut, K11EMA)
+array.push(allBandsGapOut, K11Upper)
+array.push(allBandsGapOut, K11Lower)
+array.push(allBandsGapOut, K22EMA)
+array.push(allBandsGapOut, K22Upper)
+array.push(allBandsGapOut, K22Lower)
+array.push(allBandsGapOut, K33EMA)
+array.push(allBandsGapOut, K33Upper)
+array.push(allBandsGapOut, K33Lower)
+
+// CALL THEM LIKE THIS; NEEDS REFINING
+// [aboveAll, belowAll] = f_aboveBelowAllBands(gapOpen, gapClose, allBandsGapOut, color.orange, "All bands check")
+
+
+
+//─────────────────────────────────────────────
+// Unified K3 ↔ K33 Crossover + Doji Conditions
+//─────────────────────────────────────────────
+//var bool[] cList = array.new_bool()
+//array.clear(cList)
+
+//array.push(cList, ta.cross(K3EMA,   K33EMA))
+//array.push(cList, ta.cross(K3EMA,   K33Upper))
+//array.push(cList, ta.cross(K3EMA,   K33Lower))
+//array.push(cList, ta.cross(K3Upper, K33EMA))
+//array.push(cList, ta.cross(K3Upper, K33Upper))
+//array.push(cList, ta.cross(K3Upper, K33Lower))
+//array.push(cList, ta.cross(K3Lower, K33EMA))
+//array.push(cList, ta.cross(K3Lower, K33Upper))
+//array.push(cList, ta.cross(K3Lower, K33Lower))
+
+//dojiHit = (candleDoji1 or candleDoji2) and dojiDoubleHitsAnyBand
+//dojiHit = (candleDoji1) and dojiDoubleHitsAnyBand
+
+//crossoverHit = false
+//for i = 0 to array.size(cList) - 1
+//    if array.get(cList, i) and dojiHit
+//        crossoverHit := true
+
+//c11 = dojiHit and not na(dojiLevelCheck) and f_dojiIntersectsAnyTrendline(dojiLevelCheck, dojiTolerancePct)
+
+// anyTFcross = crossoverHit or c11
+//anyTFcross = crossoverHit
+
+// Color candle when double-doji intersects any registered trendline
+//barcolor(c11 ? color.rgb(255, 0, 0) : na)
+
+
+
+
+
+//─────────────────────────────────────────────
+// DOJI ZONES & MARKERS (HTF → lower TF projection)
+//─────────────────────────────────────────────
+
+// New HTF candle flags (on current chart)
+newP1 = p1_Time != p1_Time[1]
+//newP2 = p2_Time != p2_Time[1]
+
+// Only flag once per HTF candle
+dojiStart1 = candleDoji1 and newP1
+//dojiStart2 = candleDoji2 and newP2
+
+// Box half-width in milliseconds (keep it INT)
+localBarMs1 = time - time[1]            // series int
+expand1     = int(localBarMs1 * 1.5)      // force to int
+
+// Draw HTF doji zone for Set #1
+if showDoji1 and candleDoji1
+    box.new(p1_Time, p1_High, p1_Time + expand1, p1_Low, xloc = xloc.bar_time, bgcolor = dojiZoneColor1, border_color = dojiZoneColor1)
+
+//localBarMs2 = time - time[1]
+//expand2     = int(localBarMs2 * 1.5)
+
+//if showDoji2 and candleDoji2
+//    box.new(p2_Time, p2_High, p2_Time + expand2, p2_Low, xloc = xloc.bar_time, bgcolor = dojiZoneColor2, border_color = dojiZoneColor2)
+
+
+// Markers at doji mid-levels, one per HTF doji
+dojiMarker1 = showDojiMarkers and showDoji1 and dojiStart1 ? dojiMid1 : na
+//dojiMarker2 = showDojiMarkers and showDoji2 and dojiStart2 ? dojiMid2 : na
+
+
+//plotshape(dojiMarker1, title="Doji Marker #1", style=shape.cross, location=location.absolute, color=dojiMarkerColor1, size=size.tiny)
+//plotshape(dojiMarker2, title="Doji Marker #2", style=shape.cross, location=location.absolute, color=dojiMarkerColor2, size=size.tiny)
+
+
+//─────────────────────────────────────────────
+// HTF body for S/R box placement
+//─────────────────────────────────────────────
+htfTop    = math.max(htfOpen, htfClose)
+htfBottom = math.min(htfOpen, htfClose)
+
+//plotchar(anyTFcross, "CrossFound", "✖", location=location.top, color=color.red, size=size.tiny)
+
+
+
+//─────────────────────────────────────────────
+// K3–K33 crossover box generation (S/R Zones)
+//─────────────────────────────────────────────
+//dc_tf         = input.timeframe("2D", "S/R Zone Detection", options=["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"])
+
+// if dc_draw_boxes and anyTFcross
+if dc_draw_boxes
+    htfTop    := math.max(htfOpen, htfClose)
+    htfBottom := math.min(htfOpen, htfClose)
+
+    localBarMs2 = time - time[1]
+    expandSR    = localBarMs2 * 2
+
+    if dc_box_mode == "Chart"
+        box.new(time - expandSR, htfTop, time + expandSR, htfBottom, xloc=xloc.bar_time, bgcolor=dc_box_color, border_color=dc_box_border)
+
+    if dc_box_mode == "HTF"
+        box.new(p1_Time - expandSR, htfTop, p1_Time + expandSR, htfBottom, xloc=xloc.bar_time, bgcolor=dc_box_color, border_color=dc_box_border)
+
+    if dc_box_mode == "Both"
+        box.new(time - expandSR,   htfTop, time    + expandSR,   htfBottom, xloc=xloc.bar_time, bgcolor=dc_box_color, border_color=dc_box_border)
+        box.new(p1_Time - expandSR, htfTop, p1_Time + expandSR, htfBottom, xloc=xloc.bar_time, bgcolor=dc_box_color, border_color=dc_box_border)
