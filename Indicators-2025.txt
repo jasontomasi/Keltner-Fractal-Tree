@@ -1,0 +1,948 @@
+﻿FX indicator tests: May 2025
+
+EMAs, source=HIGH (x3):
+1) Timeframe: 1-day, 150-length
+2) Timeframe: 2-day, 150-length
+3) Timeframe: 3-day, 150-length
+4) Timeframe: Weekly, 169-length
+
+150 SMA + bollinger:
+> If SMA above bolly & enters then exits bolly, check angle of entry point and exit point; if it exits at a lower price, and price did not puncture SMA, then is downtrend
+> If SMA below bolly & enters then exits bolly, check angle of entry point and exit point; if it exits at a higher price, and price did not puncture SMA then is uptrend
+
+Inevitrade+ RSI + bollinger:
+> Weekly TF: If entire frestanding candle is above or below both bolly bands (Inevitrade+ and chart bollinger), and RSI overbaught or oversold (70 / 30 respectively), then draw S/R at top/bottom of wick
+> If no freestanding candle exist, use the one which closes outside of the chart bolly bands, so long as the Inevitrade+ bolly & RSI rule is still met
+> Try using the last candle out of the band, if there are multiple consecutive candles, or try using the first candle
+>> D/D would be lower by using last candle, assuming that the candle is lower/higher, respectively
+>> Where should S/L be?
+> Daily TF: As above; some daily S/R zones only show either top or bottom support. Use measuring tool between whichever D zone is found, and put the 50% measure at the current idle price (outside of market hours), and if candle formations indicate a likely zone on the opposite side of price, infer another zone to be present
+
+
+
+
+
+
+Jason's Keltner strategy
+
+------------------------
+CONTEXT
+------------------------
+This indicator has inadvertently become a predictor of price direction. I avoid emotive language such as "recession" or "bullmarket", keeping in mind that they are human words for when things are looking favourable, or unfavourable. Price is only mathematics, and doesn't feel anything.
+
+
+
+
+
+------------------------
+INSTRUCTIONS
+------------------------
+“Shifties” are price instability, usually indicating reversals. By themselves, it could be a temporary/small reversal. Near ‘pullback’ signals, it indicated upcoming or in-progress reversals. Don’t necessarily buy/sell here; use only as a warning signal. I would say, if price is going in a direction without a seeming cause (without Price Imbalances
+
+
+“Price Imbalance” (purple lines) show where price must snap back to.  Price will bounce on, or pierce through the line multiple times (on Weekly sampling).  For now, Price Imbalances are permanent, and there’s no way of telling when the orders have completed at those locations.
+
+
+“Pullback” signals show where price will change direction from its current price trajectory, but they don’t indicate a specific time period; just price levels, but usually soon.
+Red shows price going DOWN. Green shows price going UP. From here, price normally climbs/drops to the nearest Price Imbalance, or maybe the next few if there are multiple stacked which haven’t been filled adequately (touched enough times), as per liquidity availability and order execution times, presumably.
+
+
+S/R (green lines and red lines)
+As of now, both have an unspecified number of bounces (if any) to completion. They sometimes appear on Price Imbalances, or nearby.
+As with all aspects of the indicator, the red S/R lines are calculated regardless of candle price. They are multi-year S/R lines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------
+TIMEFRAMES
+--------------------------------------------------------------------
+Keltner channel (200 day length, 8x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+Keltner channel (47 day length, 4.5x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+Keltner channel (47 day length, 4.5x multiplier, EMA, Source=close, Timeframe=2DAYS)
+Keltner channel (86 day length, 3.2x multiplier, EMA, Source=close, Timeframe=DAILY)
+Keltner channel (86 day length, 8.9x multiplier, EMA, Source=close, Timeframe=DAILY) *
+Keltner channel (169 day length, 10x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+
+
+
+
+---------------
+Precious metals
+---------------
+Keltner channel (200 day length, 8x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+Keltner channel (47 day length, 4.5x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+Keltner channel (86 day length, 3.2x multiplier, EMA, Source=close, Timeframe=DAILY)
+>> 2-day and Weekly K calculations both look accurate, but show slightly different things
+>> 2-day K, 1-day Trendlines
+
+
+
+
+
+
+---------------
+Currency pairs
+---------------
+Keltner channel (200 day length, 8x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+Keltner channel (47 day length, 4.5x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+
+
+
+
+---------------
+Cryptocurrencies
+---------------
+1W, 2D
+Keltner channel (200 day length, 8x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+Keltner channel (86 day length, 3.2x multiplier, EMA, Source=close, Timeframe=DAILY)
+Keltner channel (47 day length, 4.5x multiplier, EMA, Source=close, Timeframe=WEEKLY)
+
+
+
+
+---------------
+Stochastic
+---------------
+High = 10
+Middle = (...57%...)
+Low = 95
+Loopback = 211
+Over/b = 95
+Over/s = 5
+
+
+
+
+
+
+
+
+
+
+
+
+CHECKLIST:
+1) (DONE) Order blocks (K1-K2 gap peek)
+2) (DONE) Market imbalance (K1-K2 peek outs)
+3) (DONE) Fractal trend lines (K1-K2 EMA crossover trend lines on K bands (TradingView limits candles but, it's possible to locate on M timeframe and draw manually))
+4) TO DO: Investigate candle wedge detection
+5) TO DO: Investigate reversal detection, from order blocks (EMA equivalence)
+6) TO DO: Investigate order block lifetimes (do they ever expire?)
+7) TO DO: Add a third K band ((86 day length, 3.2x multiplier), and figure out how to incorporate it into the "Two-point K2Upper trendlines on EMA Crossovers, and/or
+parallel channels on both value, simultaneously
+8) TO DO: draw parallel channels on K2 bands (with 0.25%, 0.5%, 0.75%), as candles seem to move on those levels, when moving between EMA crossovers
+9) TO DO: test for signs of K1/K2 band equivalence, using trend lines on K peek outs; if diff in candle price when trend line next hits, do the price candle range in diff S/R zones?
+10) TO DO: look back in time upon dotted yellow lines; do their previous & next K band trend line hits also show candle in diff S/R zones?
+
+
+11) TO DO: With S/R boxes (K3-K33 EMA & K band crossovers), check whether I can filter out false signals by only using those which either;
+Maybe
+- hit a blue K bands (K3 and K33)
+- hit an EMA
+- hit my red lines
+- hit my purple lines
+- hit my green lines
+Maybe:
+- Hitting only draw those intersecting K11EMA and/or K1 EMA
+- and not intersecting K2 and/or K22 EMA
+Maybe:
+- Calc only only Monthly timeframe
+Maybe:
+- If peeking out K3 or K33 bands, high-strength S/R
+- If touching K22 EMA, medium-strength S/R
+- Inside K3-K33 bands, AND NOT touching K22EMA or K33EMA, don't draw
+Maybe:
+= If it's on a doji candle, or the previous candle is a doji
+
+
+
+
+12) (DONE) Get GPT to make code to identify a doji bar (wicks combined > bar body)
+
+
+13) TO DO: Found out how to count the impact of a 'pullback' when there are multiple stacked on each other, if 0.60 (60%) is the onset of symptoms, and seemingly always a doji
+
+
+14) Order blocks: K5 ((35-day, 3.2x) 2-day calc) into either K11-K22 gap peek, and map on whichever is farthest
+
+
+15) Test finding #24 (K5 Keltner peek out, mapped onto EMA trendlines)
+
+
+16) Finding #28; K4 & K5 Keltner peeks, find way to reduce lines before coding it in
+
+
+17) K5 onto K22, Keltner peeks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+K2EMA, K2Upper, K2Lower (yellow)
+K3EMA, K3Upper, K3Lower (blue)
+
+
+K11EMA, K11Upper, K11Lower
+
+
+
+
+
+
+
+
+
+
+
+
+crossEvent4 = ta.cross(K11EMA, K22EMA) // * CALC ON 2D
+crossEvent5 = ta.cross(K22EMA, K33EMA) // * CALC ON 2D
+crossEvent6 = ta.cross(K1EMA, K2EMA) // * CALC ON 2D
+crossEvent7 = ta.cross(K33EMA, K3EMA) or ta.cross(K33EMA, K3Upper) or ta.cross(K33EMA, K3Lower) // * CALC ON 2D
+crossEvent8 = ta.cross(K33EMA, K11EMA) or ta.cross(K33EMA, K11Upper) or ta.cross(K33EMA, K11Lower) // * CALC ON WEEKLY
+crossEvent9 = ta.cross(K33EMA, K2EMA) or ta.cross(K33EMA, K2Upper) or ta.cross(K33EMA, K2Lower)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Keltner channel (27 day length, 3x multiplier, EMA, Source=close)
+Keltner channel (7 day length, 2.7x multiplier, EMA, Source=close)
+Keltner channel (7 day length, 1.4x multiplier, EMA, Source=close)
+Keltner channel (54 day length, 5.3x multiplier, EMA, Source=close)
+Keltner channel (32 day length, 3.5x multiplier, EMA, Source=close)
+
+
+EMA (21-day, W timeframe)
+EMA (18-day, W timeframe)
+
+
+
+
+200 / 8
+175 / 7
+150 / 6
+125 / 5
+100 / 4
+75 / 3
+50 / 2
+25 / 1
+
+
+
+
+
+
+47 / 4.5 = 10.44
+37 / 4 = 9.25
+27 / 3 = 9
+17 / 2 = 8.5
+7 / 1 = 7
+
+
+
+
+
+
+----------
+224*2=448
+112*2=224
+56*2=112
+28*2=56
+14*2=28
+7*2 = 14
+
+
+
+
+TEST CHARTS
+--------
+https://www.tradingview.com/chart/e059CGgq/?symbol=AMEX%3AXOP
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=AMEX%3ACMCL
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=BINANCE%3ABTCUSD
+> 47 day, 4x/4.5x, D and W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=BINANCE%3AETHUSD
+> 4.5x and 2.5x, D and W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=CRYPTO%3AXRPUSD
+> 47 day, 4.5x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=AMEX%3ASPY
+> 200 day, 8x, D and W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=OANDA%3AUSDJPY
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=NYSE%3ACMG
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=FOREXCOM%3AEURUSD
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=FOREXCOM%3AXAGUSD
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=NZX%3ASPK
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=OANDA%3ANZDUSD
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=FOREXCOM%3ANZDJPY
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=OANDA%3AXPTUSD
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+https://www.tradingview.com/chart/e059CGgq/?symbol=NZX%3ANZX
+> 47 day, 4.5x, W
+> 200 day, 8x, W
+
+
+
+
+
+
+THEORIES
+--------
+Does the number of 'Shifties' correlate with the number of piled up / stacked orders? Could be 1:1 correlation, or a multiple?
+> Maybe competing EMA's cause the 'shifties' pattern, until flushed out by pullbacks?
+
+
+
+Do 'shifties' work as in the see-saw analogy, where they cause more to occur at the same price, in future?
+
+
+
+Does it mean something when a shifty occurs on the same candle as a Price Imbalance?
+
+
+
+Is there a correlation between unfilled orders, and "recession" duration? (ie. Pullbacks or Price Imbalance X multiplier = duration)
+
+
+
+
+Keltner channel (50/49/47 day length, 4x/2.7x/2.5x multiplier, EMA, Source=close)
+> When the price pierces the keltner channel, whatever price the corresponding EMA was at that time period, price will likely hit that EMA again
+> And vice versa; if a price bounced on the EMA, does the corresponding Keltner channel price also become an S/R zone?
+>>> Does direction matter? Green candle = does it mean S/R at top of band, and red candle mean S/R at bottom of band?
+>>> In which case, can the price be considered as filled by having the Keltner channel hit the S/R target, or must the price candlestick hit the S/R?
+>>> How long does each zone last for? Do they expire (when hit or otherwise), are they semi-permanent, or permanent?
+> Is that how S/R zones are formed?
+> If true, maybe there will be doji candles, and/or multiple opens/closes at that price, and/or relation to FVGs (?), to confirm it
+> DO: draw PINK horizontal line corresponding the EMA
+> DO: measure 50% mark between S/Rs (all S/R using both old Inevitrade+ & new Keltner channel method), and use to locate inferred S/Rs
+
+
+> EMA crossovers (50 & 200) on W timeframe; plot corresponding Keltner band prices and, if close enough and if doji candles present to indicate a level, then draw as zone?
+>> In cases which EMA crossovers, if the crossover occurs between candles, plot the candles on both sides of the crossovers, and use the corresponding Keltner points to draw a zone
+>> In cases of normal plotting, if there are multiple dojis piercing the EMA, or peeking out the bands, use the middle one if there's an uneven number, or the middle two if there are an even number
+>> DO: draw lower EMA (47 day) on the EMA crossover itself, and all Keltner band levels (200 day & 47 day)
+
+
+
+
+> Do EMA crossovers form trend lines, and is there correlation between existing patterns (wedges, parallel channels, etc) and crossover points?
+>> What if, wedges which start outside of one or both channels, are designed to balance the market price? If so, how can we see the end of the pattern?
+
+
+
+
+> DO Keltner crossovers (either crossing each other, or on the convergence points of EMA on Keltner)
+> DO: draw solid line
+
+
+
+
+> Check when dojis form on S/R, and record position of EMA -- it is exactly on another S/R?
+> DO: draw PINK horizontal line corresponding the EMA
+
+
+> When multiple consecutive candles peek out of the Keltner, do their corresponding EMAs show the bounds of an S/R zone?
+i.e ETH/USD, W, 2.5x, 31/3/2025 @ $2,734.34 - 21/4/2025 @ $2,603.60 (2.7x hits 50% of the 2.5x zone)
+
+
+
+
+> When the 47 EMA crosses the 200 Keltner channel, and vice versa, do the corresponding points match with an existing level?
+> DO: draw WHITE vertical dashed line
+> DO: draw circle at the convergence point of the crossover
+
+
+
+
+> Future MA location (and in turn, the Keltner channel location) can be roughly calculated - with the Keltner bands smoothed out for a lack of knowledge of the future movements between the current position and the assumed future location, since the MA movement between levels, will change the locations of the bands - assuming that MA will hit pre-calculated levels. Possibly, the price doesn't need to hit the levels, so long as the MA does.
+
+
+
+
+> Do EMA crossovers reset price (candles) into a new level; from one S/R zone to another?
+> EXAMPLES:
+NZD/USD: Oanda: W: 2/2/2015: $0.62647 (bottom of 200 day keltner), became the location of a future S/R; candle bounces confirmed on 9/5/2022, 15/8/2022, 26/12/2022, 17/7/2023, 1/1/2024, 30/11/2024, 
+NZD/USD: Oanda: W: 1/2/2021: 
+
+
+
+
+> K2upK1up (200-DAY piercing up through 47-DAY) seems to signal pullbacks; perhaps filter them out by counting previous candles and discounting multiple channel pierces within a certain threshold, so that only uncommon pierces are marked (Pine: use crossover, not cross not crossunder, as the direction of the pierce seems to be important)
+
+
+After finding that EMA points have on both X-Y axis a flat doji, does it mean that any Weekly doji which forms on a peak, can also be used to determine a present pullback, if a matching doji can be confirmed, and despite not knowing exactly where the EMA will be? Maybe Keltner bands have a correslation to this?
+>> Is there a consistent way to map X-Y on both top/bottom of Keltner, and both EMAs, in order to determine when orders are fulfilled?
+>> Do Keltner crossovers relate to this?
+
+
+
+
+I think that parallel channels are a result of the X-Y axis pull from the EMAs themselves. This would account for why it bounces on 0%, 25%, 50%, 75%, and 100% of a parallel channel.
+
+
+
+
+For the first candle in a series, of candle which peek-out from the lower K channel, but not from the higher K channel, creating a level on the topmost keltner channel, is there significance of keltner crossovers or, is it superficial and both channels have equal weight, in terms of orders to be fulfilled?
+>> Maybe, there is a point at which these levels become nullified. If so, is it when price hits one of the EMAs? (INDICATOR: find a way to define, add each order line into an array, then make them opaque from the point in which they are nullified, or crop them, if Pine script allows.)
+>> Maybe, the reason why price seems to need to hit order lines/blocks from BOTH directions, is to attain equilibrium of both buy & sell orders. Maybe, the reason why these order lines then become S/R for so long, is that some orders are only half-filled?
+
+
+> EXAMPLES:
+>> OANDA:USD/ZA: 27/3/2013, W: Weekly candle peeks out K1 band, but not K2 band. However, that exact level was already set on 26/12/2011 by an EMA crossover.
+>> OANDA:USD/ZA: 13/1/2014, W: Weekly candle peeks out K2 band, but not K1 band. K1 band crossed K2 EMA on 14/4/2014, and made a level at the same price (within 1 cent variance). Both lines (both orders?) were fulfilled in September & October, when price hit the block in both directions, also showing resistance there, as per candle movements.
+>> NASDAQ:NVDA: 26/12/2023, candle peek out K2 band, order set @ K1 band ($53.46), coinciding with K1 band / K2 EMA crossover on the same week, at the same price.
+
+
+
+
+Reversal indicator: order of placement between: Keltner belts, EMA positions, duration of candles peeking out of Keltners (and measuring 50% mark of the candles which do peek out - maybe 2x candles in a series), may be able to indicate trend reversals?
+
+
+
+
+K-bands: do they provide S/R in a useful way? If so, does it correlate to Price Imbalances or to green/red S/Rs?
+> Yes, K3 & K33 bands and EMA seem to
+
+
+
+
+Does the price often idle at the price of a ‘pullback’ candle (either O/H/L/C). Does it print doji candles at those prices? Does it print more pullback signals at that same price level? Is a ‘pullback’ candle the marker of an entire S/R zone? Look for correlations with Price Imbalances - do they touch, etc?
+> Yes, the pullback signal candle (Open to Close, and High to Open, and Low to Close) seems to mark the location of an entire zone, both on 2-Day and Weekly calculation.
+> 
+
+
+
+
+If one Price Imbalance fulfilment creates another, is there a K-band pattern to signal whether it will, predictively? See-saw analogy: one order hits equilibrium, but since it was, by nature, overstretched, the snap-back momentum moves the other (opposite) see-saw seat slightly too much upon order fulfilment, I think, causing another lot of orders to be slightly algorithmically misplaced?
+
+
+
+Why do parallel channels exist? (Examples: NVO, USD/ZAR, LMT, PFE)
+> Is it a way to ensure a certain price is met, without succumbing immediately to imbalance obligations? i.e are they price-drop / price-increase delay/stall mechanisms? Do they always correlate with unfilled orders? Symbol:NVO is channeling up, then down, but with imbalances only on one side.
+> parallel channels cause price bounces at: 0%, 25%, 50%, 75%, 100%. Being diagonal in nature, mixing a directional aspect with horizontal price, is the entire channel just a diagonal order book? It would explain why price respects the levels so exactingly.
+
+
+
+
+Price Imbalances: stacked: when unfilled orders are stacked, sometimes the outermost one or two won’t be filled, almost as though the ‘weight’ of the stacked orders is somehow fulfilled all in one go, at another price . Can this be predicted? (ie “Recession” (abs. bottom), “Bullmarket” (abs. top)). Re-colour low probability lines. K-bands might validate/invalidate imbalances, but I doubt it.
+
+
+
+
+
+
+
+
+
+
+IDEAS
+
+Multi-TF analysis: 2x TFs with different pullback colours; low, mid, high, all displayed simultaneously (regardless of UI timeframe). Use TFs which only sometimes overlap (2D and W)? Makes it easier to time pullbacks?
+> Maybe could match pullbacks on pullbacks, and pullbacks on shifties, on LTF vs HTF?
+
+
+
+Pullback strength or timing? Shifties nearby to pullback signal, to show timings?
+> Probably not needed; is easy enough to see manually.
+
+
+
+if (2x consecutive candles peek out 7-day K band) and (candles are > 50% out 7-day & 47-day)
+and (if 18-day EMA is on opposite side of peek out direction)
+and (if peek out one keltner, but not the next, then measure 50% the space between the next keltner and the top/bottom of candle)
+or (when the measured 50% space mark hits either price or an EMA, then mark an alert/plotshape at the junction candle)
+
+
+
+
+or (2x consecutive candles peek out 7-day K band) 2x consecutive candles peek out 47-day K band)
+
+
+
+
+or (candle above/below 7-day EMA) and (3x consecutive candles not touching 7-day EMA) and (peek out 7-day K band)
+
+
+
+
+if (2x consecutive candles peek out 7-day) and (candles is > 50% out 7-day & 47-day)
+
+
+
+
+
+
+How prevalent is it that a candle would be: only touching one EMA but not the other two, and/or peek out K channel, and be freestanding of all EMAs
+> This could be the logic for reversal signals, and/or be used to generate a trustworthiness rating for a buy/sell signal
+> half truthworthy == recommend sell at 25% level of next K channel and candle high/low
+> very trustworthy == recommend sell immediately
+
+
+Could also have a tally/counter for each signal and on the 2nd of the same signal type, the trustworthiness is set to maximum
+
+
+- if peek out Kblue, and above K1, or above K1 and below K2, sell at 25% of price between next K channel and current price
+- if peek out Kblue, and peek out K1 or K1 EMA, sell now
+
+
+OR, use my purple line levels (Price Imbalances) and measure 50% between 
+
+
+OR, calculate Fibb level (0.618(?)) of space between both of my EMAs, when K2upK1up event triggers (red line event), and look for overlap
+
+
+
+
+
+
+Market imbalance; locating future price imbalance (Keltner peek)
+> What if, as well as every Keltner peek causing S/R levels, it also causes another imbalance at the same price (candle price or EMA price)?
+> To measure, maybe the body high/low between a K band peek out, and the body high/low of the equivalent band's next sequential EMA hit,
+> can be used to infer the exact price level of where the price imbalance has been created?
+> Possibly, on double Keltner band peek outs, the body open/close is worth more than just candle high/low, as some wick-only orders seem to not get filled.
+
+
+> Example: FOREXCOM: USP/JPY: W:
+>> 10/3/2008, Weekly K1 band peek down (K2 doesn't yet exist), the top of the sell candle body (within 10 cent variance),
+(1) $112.119 marks the K1EMA price at the time of peek out, and causes another K1peek on the next instance whwere K1EMA hits that price in the future (9/3/2025).
+(2)16/6/2008 marks the next K1 EMA touch after the K peek, and when measuring from the first candle body, to the EMA touch candle (top & bottom, respectively), the K1 peek candle forms the 50% mark and marks the exact location where the K2EMA resides on the week of the future K1 peek out
+(3) Likewise, the K1EMA price at 10/3/2008, marks the location of a future candle, where a new order block (INDICATOR: white line, peek into gap) is placed at $112.625 on 27/10/2014.
+(4) Again, on 18/6/2016, $112.116
+
+
+>> INDICATOR TODO:
+>> At every K peek candle price; create text label with price ("Imbalance: $xyz.xy")
+>> Put each K peek candle into an array; when it intersects a previous K peek S/R line, create text label with price ("Balance restored: $xyz.xy")?
+
+
+
+
+S/R and price imbalance: validity period:
+> How many bounces, OR K-band pattern to signal completion? Can the next price direction be predicted, even in the absence of imbalances?
+
+
+
+
+EMA equivalance as a reversal signal
+> If price must return to the level of price imbalance, then EMA swings at equivalent prices could also indicate when order blocks have been filled, and when price is ready to move to
+> the next block (if there is one!).
+> Analyze red lines on K1/K2 Upper bands, from first signal, and at each point, checking EMA price at each band re-test; are there patterns in price, and does EMA swing to equiv. levels
+> indicate anything of value?
+> Does order of K bands have relevance, or is one EMA dominant
+> Can order block starts/finishes be mapped to anything?
+
+
+Example: https://www.tradingview.com/chart/e059CGgq/?symbol=OANDA%3AUSDZAR
+
+
+
+
+EMA crossovers (47 day (4.5x), 86 day (3.2x), Daily calculation)
+> Price moves in parallel channels which span from one EMA crossover to the next; mapped from K2Upper-K2Upper, K2Lower-K2Lower bands
+
+
+
+
+Dual rules, running concurrently (47 day (4.5x), 86 day (3.2x), Daily) + (200 day length, 8x multiplier, WEEKLY)
+> It looks as though there are two sets of EMA crossover rules running, with both having similar sets of line connectors between EMA crossovers, and their own buy/sell/gap levels
+> So long as one band fits within the other, to a margin of error, then it would go unnoticed, and it explains why candles occasionally do unexpected behaviour (swings) out of channel
+> and could explain the formation of FVGs. Need to investigate more.
+
+
+
+
+Look at how K1-K11 & K3-K33 intersections, and look for correlations with K2 & K22 EMAs; candle price, K2 price, K22 price, candle patterns (wedges, channels, etc).
+
+
+Recession/pullback timing prediction:
+(1) What's the avg/min/max time between first imbalance signal - compared to my red lines, and to doji candle appearance, 
+(2) Does this correlate with the 60% time level?
+
+
+
+
+When there are multiple imbalances being stacked on each other without fulfilment, does the 60% level (0.60 on Gann box) cause a FVG when one of the imbalances pulls too far on another?
+i.e is 60% always either: (1) the onset of symptoms of a pullback, or (2) does it become an FVG?
+is an FVG nothing more than invisible bands being pulled too far away from each other, which is why they must always be filled again at the same point of origin?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+> Maybe different timeframes need different multipliers;
+
+
+DAILY
+47-day & 4.5x
+200-day & 8x
+
+
+WEEKLY
+47-day & 2.5x
+
+
+
+
+SMA/EMA
+> What if, candles don't move the averages, but the averages move the candles?
+
+
+
+
+
+
+FINDINGS
+--------
+1) The respective EMA price point(s) of the candles which peek out of Keltner bands, set the S/R zones.
+2) The Keltner band levels on an EMA crossover, set the reversal points between S/R zones (the multiplier shows where they are)
+3) When an EMA crossover occurs on a single candle, the respective Keltner band prices, as well as the lower EMA (47 day) shows the location of S/R price levels.
+4) When an EMA crossover occurs in the middle of two candles (not directly on one candle), sampling the data of the lower EMA (47 day) intersections, shows the location of S/R level changes. There are dojis present, which span the distance between the two lines, as well as clear candle retests.
+5) When price touches EMA (first candle in a series (possibly the median candle)), the Keltner channel levels should be close enough together to form a zone, rather than individual S/Rs
+(EXAMPLE: OANDA:NZD/CHF: W: range(19/2/2024 ($0.50626) - 15/7/2024 ($0.50705)), followed by impulse candles
+
+
+6)
+
+
+The definition of a 'series' of candles to be counted before marking another EMA touch, is when 5 consecutive candles are freestanding
+
+
+
+
+5x consecutive freestanding candles should be present... before marking the boundary between series of EMA touches
+
+
+7) The highest candle of a series which peeks out the Keltner channel, should be plotted on the opposite EMA's Keltner channel, in the same direction
+
+
+8) When 47-day Keltner in inside 200-day Keltner, and price peeks out of 47, but doesn't peek out of 200, plot a zone between both Keltner points; accumulation seems to occur here
+>> Likewise, when the cable peeks out of both. It seems to be stronger than intersecting keltner channel & EMAs.
+>> Gap up/down, or impulse candles could indicate when price is ready to leave that zone
+
+
+9) When K1channel pierces through K2 EMA, plot it on both sides of K2 channel.
+
+
+10) Dojis may signal reversals/bounces, when if the corresponding Keltner points are marked as a single zone (K2upK1up). Dojis visible on Daily timeframe, with indicator on Weekly timeframe.
+
+
+11) When the first of a series of candles (or single candles) peek out of the lower Keltner channel, but not outside the higher channel, the higher Keltner band seems to mark an area where price will first touch, then bounce down to the associated EMA. Example: price peeks out the topside of 200-day Keltner, but not the 47-day Keltner, so we mark the price of the top Keltner channel, expect price to soon touch that point (even if no previous candles have touched that price point), before it meets the 47-day EMA. My theory is that orders are set when the peek first happens, which would explain why price seems to need to touch it. Daily timeframe shows dojis at these top levels which, I think, further confirms that some orders have been fulfilled there. Here, the definition of "a series" seems to be reset when at least one freestanding candle dips back within the lower channel.
+Obviously, regular traders can't utilise this theory/method, due to broker constraints (commissions, swap fees).
+Examples: https://www.tradingview.com/chart/e059CGgq/?symbol=OANDA%3AUSDJPY
+11/11/2023 (was also marked by the presence of K1upK2EMA; order fulfiled 4/12/2024), 26/2/2024, 25/3/2024, 20/3/2024 (orders fulfiled 31/6/2024, marked by the presence of K1downK2EMA). I notice that Keltner crossing EMA at the bottom seems to occur between sets of Keltner peek series (more testing needed).
+((DELETE THIS TEXT: In cases where such orders form an ever-increasing set of levels, I supposed that the final level can be identified (and orders sets on) the presence of a Weekly doji, or other such common reversal indications. I've noticed that dojis are common when price falls back within the lower Keltner channel.))
+
+
+12) 'Flat' dojis (candles whose bodies are so small that they're difficult to see), when looking at the intersection points of its respective EMAs (both), seem to have an accompanying doji when checking the X-Y axis. Presumably some sort of equilibrium has been reached. If the left side of the EMAs have flat dojis at their peaks, can this predict the magnitude of a future pullback?
+
+
+13) Keltner channels form common forex patterns (wedges, etc). Trend lines can be draw from Keltner patterns, extended both directions. At every intersection of these 'Keltner trendlines' (many of which will show that the Keltner channel itself will retest them), an X-Y axis lattice can be used, mapper to the highs (and presumably to the lows, also) of candles. These fluctuations, based from the very first candles of the listing price, combined with the two moving averages, are apparently not normally visible without the use of Keltner channels and the correct multiplers.
+>> Example: https://www.tradingview.com/chart/e059CGgq/?symbol=OANDA%3AXPTUSD
+>> Example: https://www.tradingview.com/chart/e059CGgq/?symbol=NZX%3ANZX
+>> Example: https://www.tradingview.com/chart/e059CGgq/?symbol=FOREXCOM%3AUSDJPY
+>> First-generation trend lines, drawn from Keltner patterns (purple lines)
+>> Second-generation lines drawn on both X-Y axis at each 1st gen intersection (green lines); but with up-down lines stopping at either the high or lower (respectively), marking multi-year another trend line (green lines)
+>> Both lines have an effect on price, with horizontal lines seemingly having a bigger impact then the 1st gen trend lines. Perhaps, the intersections of 1st gen lines are being used as a sort of map, and the 2nd gen lines are to mark where orders will be placed in future.
+>> These diagonal trend lines I have found, on the Daily timeframe, are filled with dojis & large impulse candles, like some sort of price accelerator.
+
+
+Example: XPTUSD: 21/11/2006, the top of the wick spans the gap between one of these lines, and the next.
+The most stunning finding is that, since these trend lines can be mapped to the earliest of price action, yet I managed to find the 'key' only after many years of price action, that it seems to be
+a sort of fractal pattern which spools from, and is set from, the very earliest time of stock market listing. The most logical explanation of its extistence is, the most profound & the most troubling thought,
+as to whether price action is set from the beginning of time! Future cannot affect the past, and therefore, these lines must have existed from the beginning.
+Does this mean that the entire lifetime of any price chart, is pre-decided?!
+Is it not only these diagonal 'spooled' trend lines which are set, as these appear only to map X-Y coordinates of past & future trend lines. Like a primmer, it draws the entire charts.
+Price doesn't move it; it moves the price -- like a seed symble or DNA sequence, where a fractal tree spools from it. The DNA contains the pattern of the body, and the body grows from it.
+
+
+14) Reverse engineered trend lines
+> Starting from the earliest and moving towards present day, on every K1 EMA and K2 EMA crossover, using only straight lines, mark a trend line starting at the first associated K2Upper price, to the next associated K2Upper price of the next crossover.
+> On every K2EMA and K3EMA (32-day Keltner, 3.5x multiplier), mark the associated crossover candle (closest trace to candle open or candle close), and mark a horizontal level.
+
+
+15) Gold & Silver seem to generate false signals (orders which are never filled) on Weekly timeframe. Daily timeframe looks accurate.
+
+
+16) Every price movement is a parallel channel hand-off of candles, at levels (0, 0.25, 0.5, 0.75, 1).
+Example: XAU/USD forms a cup&handle - upon first glance using candles alone - it appears that the cup formation starts on 1/9/2011 and ends 1/7/2000, while the handle starts 3/8/2000
+and ends roughly on 1/1/202024. Charting up intersecting parallel channels, drawn from EMA crossovers on four different combinations, shows that each part of the cup&handle is
+merely a handover pattern;
+47-day, 4.5x, 2DAY CALC
+47-day, 4.5x, 1WEEK CALC
+86-day, 3.2x, 2DAY CALC
+86-day, 3.2x, 1WEEK CALC
+Not only the diagonal intersections of parallel chanels at their levels (0, 0.25, 0.5, 0.75, 1), but also X-Y plotting of their diagonal intersections.
+This seems to explain why, sometimes, when you see a tweezer pattern, one candle wick is also slightly higher/lower then the previous, or vice versa; it's not following an X-Y plot alone.
+Every market movement, as suspected, looks to be a 'spooling' fractal pattern, created by EMA crossovers. An analogy could be, that the candles are a football, being passed between invisible players.
+The EMA crossovers show where the players are, and their levels - when drawn as parallel chanels - show how they pass the ball to each other, in a fractal manner.
+
+
+
+
+- On a personal note, I find it interesting that television news channels always provide a human-centred explanation as to why markets move when, in fact, the movements are nothing
+but movements between mathematical averages, moving according the most beneficial outcomes. The words "crash" and "pump" may as well be used interchangably, for the weight they hold.
+
+
+
+
+17) X-axis plots of every intersection of K2Lower & K22Lower, seems to show major S/R levels
+
+
+18)
+pink EMA crossover lines (K1-K11), plotted onto K22 only
+and
+blue EMA crossover lines (K3-K33), plotted onto K22 only
+
+
+
+
+18) Doji definition, typical percentage of wick?
+
+
+19) Doji as confirmation, when intersecting bands or EMAs, or when the candle length x2 (maybe with wicks, or just body) = intersecting
+
+
+20) Are doji candle directional? i.e can tracing lines between sets on doji (body to body, wick to wick, etc), provide predictive direction?
+
+
+21) Measuring time between imbalance date, and fulfilment date: signs of dropping seem to show uniformly at 50% or 60% of the way between. Does that allow us to calc the exact date
+of the next recession, and the recession bottoms? If 60% is uniform enough to mark the top, caused by an imbalance, then measuring another 40% should give us the order
+fulfillment date (recession bottom date). Use a horizontal Gann box, showing time coordinates (0, 0.125, 0.25, 0.4, 0.5, 0.6, 1).  Is there another K-band pattern which appears at the 60% mark (onset of symptoms).
+
+
+22) I think that stocks/currency pairs actually have two (valid sets) of imbalance blocks; one lot on 2-day calc, one lot on 1-week calc
+
+
+23) Candles wedges/channels are only half the story; my EMA trendlines, when combined with Stochastic, show the passover between one trendline to the next.
+i.e Stochastic shows hitting the Over/b level = the respective candle should be on the top of the trendline which it's currently travelling in, and vice versa
+> if it shows Over/s level, the respective candle should be on the bottom of the trendline which it's currently travelling in
+
+
+24) K5 Keltner peek out, mapped onto the nearest EMA trendlines (2-day calc, but possibly others), I have seen that it maps exactly to the 0.60 level of Gann boxes on price
+imbalance timings.
+
+
+25) Every 2-day calc candle touches an 'active' purple imbalance line, when mapped X-Y onto the nearest EMA trendline, shows the bounds of where can candles "can go". When candles go
+ above that X-Y plotted line, another imbalance is created (see-saw analogy).
+
+
+26) K33 Keltner peek out, maps onto itself, and onto K22 bands.
+
+
+27) Stochastic RSI; the Stochastic doesn't map onto horizontal price levels; it maps onto diagonal EMA trendline levels.
+
+
+28) K4 & K5 Keltner peeks, map onto one another but, I think it's too verbose.
+
+
+
+
+
+
+
+
+
+
+
+
+OANDA:USD/ZAR: W timeframe, D indicator:
+> 6/4/2020: down wedge which started out of a keltner channel. On W timeframe, with indicator set to D, it was clear that price bounces within the wedge were marked by EMA crossovers, most of the time!
+
+
+AMEX:SPY: W timedrame, W indicator:
+> 7/4/2025 is where K2upK1up occurs, marking on the K2 keltner channel, the location of a pullback; W timeframe shows one doji (27/10/2025), D timeframe shows two dojis (28th & 29th/10/2025)
+
+
+NASDAQ:QQQ: W timeframe, W indicator:
+> 2/8/2024 & 10/10/2025: K1 keltner pierced the 200 EMA, first down through, then up through, which created a zone. Price bounced on it 25/3/2025 & 8/5/2025, then gapped up through it 12/5/2025.
+
+
+
+
+
+
+
+
+
+
+DRAWING
+--------
+Keltner crossovers = dashed GREEN line
+EMA crossovers = solid GREEN line (at crossover), 
+EMA + Keltner = dashed PINK/YELLOW line
+Candle Keltner peek out = solid PINK/YELLOW line
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MT4 TESTING
+-----------
+19/11/2028, 12:28pm, #126332704, SELL ETH/USD @ 3114.81 (would've taken earlier; just testing to see if it hits $2857.62)
+
+
+
+
+
+
+
+
+
+
+
+
+AMEX: SPY: 
+47-day, 4.5x, 1WEEK CALC / 200-day
+86-day, 3.2x, 1WEEK CALC / 200-day
+
+
+
+
+
+
+-------------------
+Recession calculator
+---------------
+84-day/200-day
+---------------
+2/3/2009 (recession low $67.10): (18/11/96=62.49 (not filled), 5/3/97=69.01 (filled 2/3/09)), 8/10/07: blue=157.62, wicked up to line before crash (28/8/00), pink=154.18 (created 7/8/00), yellow=150.41 (1/11/99). 17/11/08=first candle to pierce through green EMA crossover trendline, was also an EMA crossover
+19/1/2016:
+24/12/2018:
+23/3/2020:
+10/10/2022:
+7/4/2025:
+27/10/2025: 
+
+
+---------------
+47-day/200-day
+---------------
+2/3/2009 (recession low $67.10): (18/11/96=66.37 (), 9/6/97=76.07 (filled 2/3/09)), : blue=155.88, wicked above, body closed in but weekly wick 3 months prior, bounced off (20/12/99), pink=155.83 (8/11/99), yellow=156.44 (16/7/07). Green EMA crossover trendline occured prior to recession bottom (6/8/08)
+19/1/2016:
+24/12/2018:
+23/3/2020:
+10/10/2022:
+7/4/2025:
+27/10/2025: 
+
+
+
+
+
+
+
+
+CONFIRMATIONS
+-------------
+W: 47 day, 2.5x
+19/06/2017 @ $375.56
+19/11/2018 @ $375.56
+
+
+W: 47 day, 2.5x
+20/05/2024 @ $2,623.61 (lower) +
+21/04/2025 @ $2608.64 (lower)
+03/06/2024 @ $2714.22 (upper) +
+31/03/2025 @ $2737.85 (upper)
+
+
+D: 200 day, 8x
+25/03/2025 @ $2780.07
+09/04/2025 @ $2662.54 (overlaps with previous area)
