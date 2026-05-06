@@ -175,45 +175,45 @@ f_fetchKC(_tf, _period, _mult) =>
 //─────────────────────────────────────────────
 // Plot Keltner channels
 //─────────────────────────────────────────────
-plot(K1EMA,   color=ema1colour,  title="K1 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K1EMA,   color=ema1colour,  title="K1 EMA",   linewidth=2, display=drawEMAs ? display.all : display.none)
 plot(K1Upper, color=ema1Kbands,  title="K1 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K1Lower, color=ema1Kbands,  title="K1 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
 
-plot(K2EMA,   color=ema2colour,  title="K2 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K2EMA,   color=ema2colour,  title="K2 EMA",   linewidth=2, display=drawEMAs ? display.all : display.none)
 plot(K2Upper, color=ema2Kbands,  title="K2 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K2Lower, color=ema2Kbands,  title="K2 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
 
-plot(K3EMA,   color=ema3colour,  title="K3 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K3EMA,   color=ema3colour,  title="K3 EMA",   linewidth=2, display=drawEMAs ? display.all : display.none)
 plot(K3Upper, color=ema3Kbands,  title="K3 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K3Lower, color=ema3Kbands,  title="K3 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
 
 // The snake
-plot(K4EMA,   color=ema4colour,  title="K4 EMA",   linewidth=3, display=drawEMAs ? display.all : display.none)
+plot(K4EMA,   color=ema4colour,  title="K4 EMA",   linewidth=2, display=drawEMAs ? display.all : display.none)
 plot(K4Upper, color=ema4Kbands,  title="K4 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K4Lower, color=ema4Kbands,  title="K4 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
 
-plot(K5EMA,   color=ema5colour,  title="K5 EMA",  linewidth=3,  display=drawEMAs ? display.all : display.none)
+plot(K5EMA,   color=ema5colour,  title="K5 EMA",  linewidth=2,  display=drawEMAs ? display.all : display.none)
 plot(K5Upper, color=ema5Kbands,  title="K5 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K5Lower, color=ema5Kbands,  title="K5 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
 
 // 2D set (dotted)
-plot(K11EMA,   color=ema1colour,  title="K11 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K11EMA,   color=ema1colour,  title="K11 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
 plot(K11Upper, color=ema1Kbands,  title="K11 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 plot(K11Lower, color=ema1Kbands,  title="K11 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
-plot(K22EMA,   color=ema2colour,  title="K22 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K22EMA,   color=ema2colour,  title="K22 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
 plot(K22Upper, color=ema2Kbands,  title="K22 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 plot(K22Lower, color=ema2Kbands,  title="K22 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
-plot(K33EMA,   color=ema3colour,  title="K33 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K33EMA,   color=ema3colour,  title="K33 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
 plot(K33Upper, color=ema3Kbands,  title="K33 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 plot(K33Lower, color=ema3Kbands,  title="K33 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
-plot(K44EMA,   color=ema4colour,  title="K44 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K44EMA,   color=ema4colour,  title="K44 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
 plot(K44Upper, color=ema4Kbands,  title="K44 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 plot(K44Lower, color=ema4Kbands,  title="K44 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
-plot(K55EMA,   color=ema5colour,  title="K55 EMA",   linewidth=3, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K55EMA,   color=ema5colour,  title="K55 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
 plot(K55Upper, color=ema5Kbands,  title="K55 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 plot(K55Lower, color=ema5Kbands,  title="K55 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
@@ -703,12 +703,20 @@ distToK2 = math.abs(close - K2EMA)
 nearestEMA     = distToK1 < distToK2 ? K1EMA : K2EMA
 nearestEMAText = distToK1 < distToK2 ? "K1EMA" : "K2EMA"
 
-if (isFirstImbalance)
+if (isFirstImbalance) and not ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
     label.new(bar_index, nearestEMA, "IMBALANCE @ $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
     f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted))
-    emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_solid)
+    emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=1, color=orderblockcolour2, style=line.style_solid)
     line.set_extend(emaLine, extend.right)
     f_trackLine(emaLine)
+
+if (isFirstImbalance) and ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
+    label.new(bar_index, nearestEMA, "IMBALANCE 2 @ $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
+    f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted))
+    emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=4, color=orderblockcolour2, style=line.style_solid)
+    line.set_extend(emaLine, extend.right)
+    f_trackLine(emaLine)
+
 
 if (isFirstImbalance) and (topSideOrder or bottomSideOrder)
     warningCounter += 1
@@ -1019,4 +1027,3 @@ if showDojiRaysW and dr_newW
         if not f_drTooClose(dr_mid, dr_w_prices, dojiRayDedup)
             array.push(dr_w_prices, dr_mid)
             f_trackLine(line.new(bar_index, dr_mid, bar_index + 1, dr_mid, xloc=xloc.bar_index, extend=extend.right, color=dojiRaysWeekly, style=line.style_solid, width=1))
-
