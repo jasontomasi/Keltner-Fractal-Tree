@@ -76,6 +76,7 @@ showEMACrossMarkers = input.bool(false, "Show EMA Cross Markers", group='VISUALS
 drawKbands    = input.bool(false, "Show K-bands?", group='VISUALS')
 drawEMAs      = input.bool(false, "Show EMAs?", group='VISUALS')
 drawShifties  = input.bool(false, "Show Shifties?", group='VISUALS')
+drawShiftiesColor = input.color(color.new(#ffa600, 100), "Shifties Color", group='VISUALS')
 drawPullbacks = input.bool(true, "Show Pullbacks?", group='VISUALS')
 
 //earningsReportDays = input.bool(false, "Include Earnings report days?", minval=0.0, maxval=100, group='INPUTS')
@@ -631,6 +632,7 @@ bottomSideOrder = (K5Lower < K22Lower and K22Lower < K2Lower)
 
 // SERIES CONTROL — ensures only ONE label per continuous stretch
 var bool inWarningSeries = false
+var bool inShiftiesSeries = false
 var int warningCounter = 0
 
 // Alert flags
@@ -667,7 +669,9 @@ if (bottomSideOrder and drawPullbacks and not inWarningSeries)
 if (bottomSideOrder or topSideOrder) and (drawShifties) // and (candleDoji2)
     // My shifties
     if warningCounter < 1
-        label.new(bar_index, close, "Shift", xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.new(#ffa600, 50), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal)
+        if not inShiftiesSeries
+            label.new(bar_index, close, "Shift", xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.rgb(255,100,0), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal)
+            inShiftiesSeries := true
         alertPullbackTop := true
         alertPullbackBottom := true
         //alert("Type: *TESTING*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
@@ -676,6 +680,11 @@ if (bottomSideOrder or topSideOrder) and (drawShifties) // and (candleDoji2)
 // EXITING THE SERIES
 if not (topSideOrder or bottomSideOrder) and inWarningSeries
     inWarningSeries := false
+
+if not (topSideOrder or bottomSideOrder) and inShiftiesSeries
+    inShiftiesSeries := false
+
+barcolor(inShiftiesSeries ? drawShiftiesColor : na)
 
 
 
