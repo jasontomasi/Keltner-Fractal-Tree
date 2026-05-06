@@ -713,19 +713,18 @@ nearestEMA     = distToK1 < distToK2 ? K1EMA : K2EMA
 nearestEMAText = distToK1 < distToK2 ? "K1EMA" : "K2EMA"
 
 if (isFirstImbalance) and not ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
-    label.new(bar_index, nearestEMA, "IMBALANCE @ $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
+    label.new(bar_index, nearestEMA, "Weak: $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
     f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted))
     emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=1, color=orderblockcolour2, style=line.style_solid)
     line.set_extend(emaLine, extend.right)
     f_trackLine(emaLine)
 
 if (isFirstImbalance) and ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
-    label.new(bar_index, nearestEMA, "IMBALANCE 2 @ $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
+    label.new(bar_index, nearestEMA, "Strong: $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal, text_formatting=text.format_bold)
     f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted))
-    emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=4, color=orderblockcolour2, style=line.style_solid)
+    emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=3, color=orderblockcolour2, style=line.style_solid)
     line.set_extend(emaLine, extend.right)
     f_trackLine(emaLine)
-
 
 if (isFirstImbalance) and (topSideOrder or bottomSideOrder)
     warningCounter += 1
