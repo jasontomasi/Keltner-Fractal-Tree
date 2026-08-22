@@ -41,7 +41,7 @@ dojiRaysWeekly = color.new(#EFBF04, 0)
 
 // Primary Keltner timeframes
 // options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"],
-selectedperiod1  = input.timeframe("W",  "Timeframe for Keltner Calculations", group='TIMEFRAMES')
+selectedperiod1  = input.timeframe("",  "Timeframe for Keltner Calculations", group='TIMEFRAMES')
 selectedperiod2 = input.timeframe("D",  "Timeframe for Trendline mapping",   group='TIMEFRAMES')
 selectedperiod3 = input.timeframe("2D", "Timeframe for K4 line",              group='TIMEFRAMES')
 selectedperiod4 = input.timeframe("2D", "Timeframe for K5 line",              group='TIMEFRAMES')
@@ -71,6 +71,8 @@ drawSRredDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0
 drawSRgreen = input.bool(true, "Show S/R (green lines)?", group='VISUALS')
 drawSRgreenDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.1, group='VISUALS')
 
+
+drawImbalance1  = input.bool(true, "Show imbalance lines?", group='VISUALS')
 drawEMAlines  = input.bool(false, "Show EMA trendlines?", group='VISUALS')
 showEMACrossMarkers = input.bool(false, "Show EMA Cross Markers", group='VISUALS')
 drawKbands    = input.bool(false, "Show K-bands?", group='VISUALS')
@@ -81,6 +83,8 @@ drawPullbacks = input.bool(true, "Show Pullbacks?", group='VISUALS')
 
 //earningsReportDays = input.bool(false, "Include Earnings report days?", minval=0.0, maxval=100, group='INPUTS')
 useWicksForAllBandCheck = input.bool(false, "Check wicks when peeking above all K-bands?")
+
+
 
 // K33 crossovers
 //dc_draw_boxes = input.bool(false, "Draw S/R Zones?")
@@ -109,6 +113,11 @@ showDoji5color  = input.color(color.new(#00BCD4, 0), "Doji Set #5", group='DOJI 
 showDoji6color  = input.color(color.new(#E040FB, 0), "Doji Set #6", group='DOJI S/R ZONES')
 showDoji7color  = input.color(color.new(#2E2E2E, 0), "Doji Set #7", group='DOJI S/R ZONES')
 dojiBoxOpacity  = input.int(90, "Doji Box Opacity (0=solid, 100=invisible)", minval=0, maxval=100, group='DOJI S/R ZONES')
+
+
+string jasonDateTime = str.format_time(time, "dd/MM/yyyy", "UTC+0")
+var label dateLabel = na
+
 
 // ─ DOJI ZONES & MARKERS ADD-ON INPUTS ─
 //showDojiMarkers  = input.bool(false,  "Show Doji Markers")
@@ -296,6 +305,11 @@ f_drTooClose(_price, _arr, _dedupPct) =>
                 hit := true
     hit
 
+f_formatCurrency(_price) =>
+    rounded = math.round(_price)
+    isWhole = math.abs(_price - rounded) < syminfo.mintick
+    "$" + (isWhole ? str.tostring(_price, "#,##0") : str.tostring(_price, "#,##0.0000"))
+
 f_gapPeek(_o, _c, _u1, _l1, _u2, _l2, _col) =>
     // Combined ranges
     upperLow  = math.min(_u1, _u2)
@@ -316,12 +330,14 @@ f_gapPeek(_o, _c, _u1, _l1, _u2, _l2, _col) =>
         lowestLower = math.min(_l1, _l2)
         if not f_drTooClose(lowestLower, srgreen_prices, drawSRgreenDedup)
             array.push(srgreen_prices, lowestLower)
+            label.new(bar_index, lowestLower, str.tostring(jasonDateTime) + ": " + f_formatCurrency(lowestLower), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#000000, color=#1E90FF, size=size.normal, text_formatting=text.format_bold)
             f_trackLine(line.new(bar_index, lowestLower, bar_index+1, lowestLower, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=2))
 
     if (peekUp and drawSRgreen)
         highestUpper = math.max(_u1, _u2)
         if not f_drTooClose(highestUpper, srgreen_prices, drawSRgreenDedup)
             array.push(srgreen_prices, highestUpper)
+            label.new(bar_index, highestUpper, str.tostring(jasonDateTime) + ": " + f_formatCurrency(highestUpper), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#000000, color=#1E90FF, size=size.normal, text_formatting=text.format_bold)
             f_trackLine(line.new(bar_index, highestUpper, bar_index+1, highestUpper, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=2))
 
     // Return the booleans so user can react to them
@@ -712,19 +728,20 @@ distToK2 = math.abs(close - K2EMA)
 nearestEMA     = distToK1 < distToK2 ? K1EMA : K2EMA
 nearestEMAText = distToK1 < distToK2 ? "K1EMA" : "K2EMA"
 
-if (isFirstImbalance) and not ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
-    label.new(bar_index, nearestEMA, "Weak: $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal)
-    f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted))
+if (isFirstImbalance and drawImbalance1) and not ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
+    dateLabel := label.new(bar_index, nearestEMA, str.tostring(jasonDateTime) + ": (WEAK) " + f_formatCurrency(nearestEMA), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal, text_formatting=text.format_bold)
+    f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=1, color=orderblockcolour2, style=line.style_solid))
     emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=1, color=orderblockcolour2, style=line.style_solid)
     line.set_extend(emaLine, extend.right)
     f_trackLine(emaLine)
 
-if (isFirstImbalance) and ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
-    label.new(bar_index, nearestEMA, "Strong: $" + str.tostring(nearestEMA, format.mintick), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal, text_formatting=text.format_bold)
-    f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=2, color=orderblockcolour2, style=line.style_dotted))
+if (isFirstImbalance and drawImbalance1) and ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
+    dateLabel := label.new(bar_index, nearestEMA, str.tostring(jasonDateTime) + ": (STRONG) " + f_formatCurrency(nearestEMA), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal, text_formatting=text.format_bold)
+    f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=3, color=orderblockcolour2, style=line.style_solid))
     emaLine = line.new(bar_index,  nearestEMA,  bar_index+1, nearestEMA, xloc=xloc.bar_index, width=3, color=orderblockcolour2, style=line.style_solid)
     line.set_extend(emaLine, extend.right)
     f_trackLine(emaLine)
+
 
 if (isFirstImbalance) and (topSideOrder or bottomSideOrder)
     warningCounter += 1
@@ -1035,3 +1052,4 @@ if showDojiRaysW and dr_newW
         if not f_drTooClose(dr_mid, dr_w_prices, dojiRayDedup)
             array.push(dr_w_prices, dr_mid)
             f_trackLine(line.new(bar_index, dr_mid, bar_index + 1, dr_mid, xloc=xloc.bar_index, extend=extend.right, color=dojiRaysWeekly, style=line.style_solid, width=1))
+
