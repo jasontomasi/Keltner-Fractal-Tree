@@ -75,8 +75,17 @@ drawSRgreenDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0
 drawImbalance1  = input.bool(true, "Show imbalance lines?", group='VISUALS')
 drawEMAlines  = input.bool(false, "Show EMA trendlines?", group='VISUALS')
 showEMACrossMarkers = input.bool(false, "Show EMA Cross Markers", group='VISUALS')
+drawCrossRectangles = input.bool(true, "Show EMA Cross Rectangles?", group='VISUALS')
+
+
+showBoxK1K11 = input.bool(false, "K1-K11",  group='EMA CROSS RECTANGLES', inline='row6')
+showBoxK2K22 = input.bool(true, "K2-K22",  group='EMA CROSS RECTANGLES', inline='row6')
+showBoxK4K44 = input.bool(true, "K4-K44",  group='EMA CROSS RECTANGLES', inline='row6')
+showBoxK4K22 = input.bool(true, "K4-K22",  group='EMA CROSS RECTANGLES', inline='row7')
+crossZoneProximityTicks = input.float(20.0, "Cross Rectangle Proximity Tolerance (ticks)", minval=0.0, step=0.01, group='EMA CROSS RECTANGLES', tooltip='Minimum distance (in ticks) a new cross rectangle must be from all existing ones. Rectangles closer than this distance will not be drawn.')
+
 drawKbands    = input.bool(false, "Show K-bands?", group='VISUALS')
-drawEMAs      = input.bool(false, "Show EMAs?", group='VISUALS')
+drawEMAs      = input.bool(true, "Show EMAs?", group='VISUALS')
 drawShifties  = input.bool(true, "Show Shifties?", group='VISUALS')
 drawShiftiesColor = input.color(color.new(#0c3299, 0), "Shifties Color", group='VISUALS')
 drawPullbacks = input.bool(true, "Show Pullbacks?", group='VISUALS')
@@ -242,6 +251,94 @@ crossEMAK3K4     = ta.cross(K3EMA, K4EMA)
 crossEMAK1K5     = ta.cross(K1EMA, K5EMA)
 crossEMAK3K5     = ta.cross(K3EMA, K5EMA)
 crossEMAK4K5     = ta.cross(K4EMA, K5EMA)
+crossEMAK1K11    = ta.cross(K1EMA, K11EMA)
+crossEMAK2K22    = ta.cross(K2EMA, K22EMA)
+crossEMAK4K44    = ta.cross(K4EMA, K44EMA)
+crossEMAK4K22    = ta.cross(K4EMA, K22EMA)
+
+
+
+//─────────────────────────────────────────
+// EMA CROSSOVER BODY ZONES
+// Uses two horizontal lines + linefill so the zone can extend.right,
+// avoiding large future bar_index projection limits from box.new().
+//─────────────────────────────────────────
+var line[] crossZoneTopLines = array.new_line()
+var line[] crossZoneBotLines = array.new_line()
+var linefill[] crossZoneFills = array.new_linefill()
+var float[] crossZoneTops = array.new_float()
+var float[] crossZoneBots = array.new_float()
+const int MAX_CROSS_ZONES = 120   // each zone uses 2 lines + 1 linefill; keep margin below TV line limits
+
+// Returns true when the candidate zone overlaps any already-drawn
+// EMA crossover zone in price. Since existing zones extend.right,
+// any later zone with overlapping price would visually overlap.
+// First-drawn zones take precedence because overlapping new ones are skipped.
+f_crossZoneOverlapsRegistry(_top, _bot) =>
+    sz = array.size(crossZoneTops)
+    hit = false
+    if sz > 0
+        for i = 0 to sz - 1
+            existingTop = array.get(crossZoneTops, i)
+            existingBot = array.get(crossZoneBots, i)
+            priceRangeOverlaps = _bot <= existingTop and _top >= existingBot
+            if priceRangeOverlaps
+                hit := true
+    hit
+
+f_trackCrossZone(_topLine, _botLine, _fill, _top, _bot) =>
+    array.push(crossZoneTopLines, _topLine)
+    array.push(crossZoneBotLines, _botLine)
+    array.push(crossZoneFills, _fill)
+    array.push(crossZoneTops, _top)
+    array.push(crossZoneBots, _bot)
+    if array.size(crossZoneTopLines) > MAX_CROSS_ZONES
+        line.delete(array.shift(crossZoneTopLines))
+        line.delete(array.shift(crossZoneBotLines))
+        linefill.delete(array.shift(crossZoneFills))
+        array.shift(crossZoneTops)
+        array.shift(crossZoneBots)
+
+// Returns true when the candidate zone (_top/_bot) lies within _tolerance
+// price distance of any already-drawn EMA crossover zone. This lets the
+// user configure a minimum spacing (in price/tick terms) so that new
+// rectangles are not drawn too close to existing ones, independent of
+// the price-range overlap check performed by f_crossZoneOverlapsRegistry.
+f_crossZoneWithinProximity(_top, _bot, _tolerance) =>
+    sz  = array.size(crossZoneTops)
+    hit = false
+    if sz > 0 and _tolerance > 0
+        for i = 0 to sz - 1
+            existingTop = array.get(crossZoneTops, i)
+            existingBot = array.get(crossZoneBots, i)
+            // Distance between the candidate zone and the existing zone.
+            // 0 when the ranges overlap, otherwise the gap between them.
+            gap = _bot > existingTop ? _bot - existingTop : (existingBot > _top ? existingBot - _top : 0.0)
+            if gap < _tolerance
+                hit := true
+    hit
+
+// Name kept for compatibility with the existing f_drawCrossBox(...) calls.
+f_drawCrossBox(_cond, _col) =>
+    if _cond and drawCrossRectangles
+        newTop = math.max(open, close)
+        newBot = math.min(open, close)
+        if not f_crossZoneOverlapsRegistry(newTop, newBot) and not f_crossZoneWithinProximity(newTop, newBot, crossZoneProximityTicks * syminfo.mintick)
+            topLine = line.new(bar_index, newTop, bar_index + 1, newTop, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=1)
+            botLine = line.new(bar_index, newBot, bar_index + 1, newBot, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=1)
+            zoneFill = linefill.new(topLine, botLine, color.new(_col, 75))
+            f_trackCrossZone(topLine, botLine, zoneFill, newTop, newBot)
+
+
+// DEFINITIONS
+// f_drawCrossBox(crossEMAK1K2 and showBoxK1K2, ema1crosscolour)
+f_drawCrossBox(crossEMAK1K11 and showBoxK1K11, ema1crosscolour)
+f_drawCrossBox(crossEMAK2K22 and showBoxK2K22, ema2crosscolour)
+f_drawCrossBox(crossEMAK4K44 and showBoxK4K44, ema4crosscolour)
+f_drawCrossBox(crossEMAK4K22 and showBoxK4K22, ema5crosscolour)
+
+
+
 
 crossK1EMAK2top  = ta.crossover(K1EMA, K2Upper)
 crossK2EMAK1top  = ta.crossover(K2EMA, K1Upper)
@@ -370,16 +467,16 @@ plotK1K5cross = showEMACrossMarkers ? (crossEMAK1K5 ? K3EMA : na) : na
 plotK3K5cross = showEMACrossMarkers ? (crossEMAK3K5 ? K3EMA : na) : na
 plotK4K5cross = showEMACrossMarkers ? (crossEMAK4K5 ? K3EMA : na) : na
 
-plotshape(plotK1K2cross, title="K1 - K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK3K2cross, title="K3 - K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK1K3cross, title="K1 - K3 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK2K4cross, title="K2 - K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK2K5cross, title="K2 - K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK1K4cross, title="K1 - K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK3K4cross, title="K3 - K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK1K5cross, title="K1 - K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK3K5cross, title="K3 - K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK4K5cross, title="K4 - K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK1K2cross, title="K1-K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK3K2cross, title="K3-K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK1K3cross, title="K1-K3 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK2K4cross, title="K2-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK2K5cross, title="K2-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK1K4cross, title="K1-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK3K4cross, title="K3-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK1K5cross, title="K1-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK3K5cross, title="K3-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK4K5cross, title="K4-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
 
 
 //─────────────────────────────────────────────
@@ -723,8 +820,8 @@ var bool wasImbalance = false
 isFirstImbalance = isImbalance and not wasImbalance
 wasImbalance := isImbalance
 
-distToK1 = math.abs(close - K1EMA)
-distToK2 = math.abs(close - K2EMA)
+distToK1 = math.abs(close-K1EMA)
+distToK2 = math.abs(close-K2EMA)
 nearestEMA     = distToK1 < distToK2 ? K1EMA : K2EMA
 nearestEMAText = distToK1 < distToK2 ? "K1EMA" : "K2EMA"
 
