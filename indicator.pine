@@ -1,5 +1,5 @@
 //@version=6
-indicator("Keltner Fractal Tree (IntuitiveNZ)", shorttitle="Keltner Fractal Tree", overlay=true, max_lines_count=300, max_boxes_count=300, max_labels_count=500)
+indicator("Keltner Fractal Tree (IntuitiveNZ)", shorttitle="Keltner Fractal Tree", overlay=true, max_lines_count=500, max_boxes_count=300, max_labels_count=500)
 
 max_bars_back = 50000
 
@@ -11,30 +11,42 @@ ema2colour = color.new(#FFFF00, 0)
 ema3colour = color.new(#00FFFF, 0)
 ema4colour = color.new(#FF0000, 25)
 ema5colour = color.new(#FFFFFF, 25)
+ema6colour = color.new(#AD46FF, 25)
 
 ema1Kbands = color.new(#FF69B4, 25)
 ema2Kbands = color.new(#FFFF00, 25)
 ema3Kbands = color.new(#00FFFF, 25)
 ema4Kbands = color.new(#FF0000, 25)
 ema5Kbands = color.new(#FFFFFF, 25)
+ema6Kbands = color.new(#AD46FF, 25)
 
 ema1lines = color.new(#FF69B4, 50)
 ema2lines = color.new(#FFFF00, 50)
 ema3lines = color.new(#00FFFF, 50)
 ema4lines = color.new(#FF0000, 25)
 ema5lines = color.new(#FFFFFF, 25)
+ema6lines = color.new(#AD46FF, 25)
 
-ema1crosscolour = color.new(#FF69B4, 10)
-ema2crosscolour = color.new(#FFFF00, 10)
-ema3crosscolour = color.new(#00FFFF, 10)
-ema4crosscolour = color.new(#FF0000, 10)
-ema5crosscolour = color.new(#FFFFFF, 10)
-emaK4K22crosscolour = color.new(#ff6500, 10)
-emaK22K44crosscolour = color.new(#ec4dff, 10)
+ema1crosscolour = color.new(#FF69B4, 0)
+ema2crosscolour = color.new(#FFFF00, 0)
+ema3crosscolour = color.new(#00FFFF, 0)
+ema4crosscolour = color.new(#FF0000, 0)
+ema5crosscolour = color.new(#00FFFF, 0)
 
+ema11crosscolour = color.new(#FF69B4, 0)
+ema22crosscolour = color.new(#FFFF00, 0)
+ema33crosscolour = color.new(#00FFFF, 0)
+ema44crosscolour = color.new(#FF0000, 0)
+ema55crosscolour = color.new(#00FFFF, 0)
 
-orderblockcolour1 = color.rgb(0, 255, 157)
+orderblockcolour1 = color.new(#27F531, 0)
 orderblockcolour2 = color.rgb(139, 2, 230, 0) // color.rgb(139, 2, 230, 0)
+orderblockcolour4 = color.new(#27B4F5, 0)
+orderblockcolour6 = color.new(#E1712B, 0)
+orderblockcolour44 = color.new(#27B4F5, 0)
+
+
+
 rangeboundcolour  = color.new(#FF0000, 10)
 emacrossmarkerBorder = color.new(#66ff00, 50)
 
@@ -44,10 +56,11 @@ dojiRaysWeekly = color.new(#EFBF04, 0)
 
 // Primary Keltner timeframes
 // options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"],
-selectedperiod1  = input.timeframe("",  "Timeframe for Keltner Calculations", group='TIMEFRAMES')
-selectedperiod2 = input.timeframe("D",  "Timeframe for Trendline mapping",   group='TIMEFRAMES')
-selectedperiod3 = input.timeframe("2D", "Timeframe for K4 line",              group='TIMEFRAMES')
-selectedperiod4 = input.timeframe("2D", "Timeframe for K5 line",              group='TIMEFRAMES')
+selectedperiod1  = input.timeframe("W",  "Timeframe for Keltner Calculations", group='TIMEFRAMES')
+selectedperiod1b = input.timeframe("2D", "--> 2nd Timeframe for locating pullbacks", group='TIMEFRAMES')
+selectedperiod2  = input.timeframe("D",  "Timeframe for Trendline mapping",    group='TIMEFRAMES')
+selectedperiod3  = input.timeframe("2D", "Timeframe for K4 line",              group='TIMEFRAMES')
+selectedperiod4  = input.timeframe("2D", "Timeframe for K5 line",              group='TIMEFRAMES')
 
 
 ema1_period = input.int(47,  minval=1, maxval=365, title="K1", group='INPUTS')
@@ -65,7 +78,10 @@ ema4_multi  = input.float(10, minval=1, maxval=365, title="K4 Multiplier", group
 ema5_period = input.int(35,  minval=1, maxval=365, title="K5", group='INPUTS')
 ema5_multi  = input.float(3.2, minval=1, maxval=365, title="K5 Multiplier", group='INPUTS')
 
-candlesrc         = input.source(close, "Source", group='INPUTS')
+ema6_period = input.int(58,  minval=1, maxval=365, title="K6", group='INPUTS')
+ema6_multi  = input.float(5.4, minval=1, maxval=365, title="K6 Multiplier", group='INPUTS')
+
+candlesrc   = input.source(close, "Source", group='INPUTS')
 atrlength   = input.int(10, minval=1, maxval=50, title="ATR Length", group='INPUTS')
 
 
@@ -73,21 +89,79 @@ drawSRred = input.bool(false, "Show S/R (red lines)?", group='VISUALS')
 drawSRredDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.01, group='VISUALS')
 drawSRgreen = input.bool(true, "Show S/R (green lines)?", group='VISUALS')
 drawSRgreenDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.1, group='VISUALS')
+drawSRorange = input.bool(true, "Show S/R (green lines)?", group='VISUALS')
+drawSRorangeDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.1, group='VISUALS')
+
+drawImbalance1  = input.bool(true, "Show imbalance lines (Weak)?", group='VISUALS')
+drawImbalance2  = input.bool(true, "Show imbalance lines (Strong)?", group='VISUALS')
+
+drawEMAlines  = input.bool(true, "Show trendlines?", group='EMA Trendlines')
+emaTrendlineExtendRight = input.bool(true, "---> Extend onward only (off = extend both)", group='EMA Trendlines')
+
+showEMAtrendK2K3   = input.bool(false, "K2-K3",  group='EMA Trendlines', inline='row1')
+showEMAtrendK1K2   = input.bool(false, "K1-K2",  group='EMA Trendlines', inline='row1')
+showEMAtrendK1K3   = input.bool(false, "K1-K3",  group='EMA Trendlines', inline='row1')
+showEMAtrendK1K11  = input.bool(false, "K1-K11", group='EMA Trendlines', inline='row2')
+showEMAtrendK2K11  = input.bool(false, "K2-K11", group='EMA Trendlines', inline='row2')
+showEMAtrendK2K22  = input.bool(true,  "K2-K22", group='EMA Trendlines', inline='row2')
+showEMAtrendK2K33  = input.bool(false, "K2-K33", group='EMA Trendlines', inline='row3')
+showEMAtrendK2K44  = input.bool(false, "K2-K44", group='EMA Trendlines', inline='row3')
+showEMAtrendK4K44  = input.bool(true,  "K4-K44", group='EMA Trendlines', inline='row3')
+showEMAtrendK11K22 = input.bool(false, "K11-K22", group='EMA Trendlines', inline='row4')
+showEMAtrendK11K33 = input.bool(false, "K11-K33", group='EMA Trendlines', inline='row4')
+showEMAtrendK3K33  = input.bool(false, "K3-K33", group='EMA Trendlines', inline='row4')
+showEMAtrendK22K33 = input.bool(false, "K22-K33", group='EMA Trendlines', inline='row4')
+showEMAtrendK5K55  = input.bool(false, "K5-K55", group='EMA Trendlines', inline='row5')
+showEMAtrendK6K66  = input.bool(true,  "K6-K66", group='EMA Trendlines', inline='row5')
+
+showEMACrossMarkers = input.bool(false, "Draw EMA Cross Markers", group='VISUALS')
+drawCrossRectangles = input.bool(false, "Draw EMA Cross Rectangles?", group='VISUALS')
+// drawCrossRectanglesWicks = input.bool(false, "---> Use Wicks for rectangles (High/Low)?", group='VISUALS')
+crossRectangleOrigin = input.string("Far Wick", "---> Rectangle Origin", options=["Far Wick", "Open/Close", "High/Low", "Near Wick"], group='VISUALS')
+drawCrossRectanglesOverlapping = input.bool(false, "---> Allow rectangles to overlap?", group='VISUALS')
+
+drawOrderedZones = input.bool(true, "Draw K-Band Ordered Rectangles?", group='VISUALS')
+orderedRectangleOrigin = input.string("Open/Close", "---> Rectangle Origin?", options=["Far Wick", "Open/Close", "High/Low", "Near Wick"], group='VISUALS')
+orderedZonesRequirePeek = input.bool(true, "---> Require K-band peek?", group='VISUALS')
+orderedZonePeekUseWick = input.bool(false, "---> Check against wick?", group='VISUALS')
+
+// Trendline intersection rectangles: uses the 6 split EMA-trendline registries.
+drawTrendlineIntersectionRectangles = input.bool(false, "Draw Trendline Intersection Rectangles?", group='TRENDLINE INTERSECTION RECTANGLES')
+trendlineIntersectionRectangleOrigin = input.string("Near Wick", "---> Rectangle Origin", options=["Far Wick", "Open/Close", "High/Low", "Near Wick"], group='TRENDLINE INTERSECTION RECTANGLES')
+filterDojiTrendlineIntersectionBox = input.bool(false, "---> Filter doji candles?", group='TRENDLINE INTERSECTION RECTANGLES')
+trendlineIntersectionDojiOCpct = input.float(20.0, "---> Doji max Open-Close % of High-Low", minval=0.0, maxval=100.0, step=0.1, group='TRENDLINE INTERSECTION RECTANGLES')
+drawTrendIntersectionRectanglesOverlapping = input.bool(false, "---> Allow rectangles to overlap?", group='TRENDLINE INTERSECTION RECTANGLES')
+showTrendlineIntersectionReg1 = input.bool(true, "Registry 1", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir1')
+trendlineIntersectionColourReg1 = input.color(color.new(#FF69B4, 0), "", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir1')
+showTrendlineIntersectionReg2 = input.bool(true, "Registry 2", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir2')
+trendlineIntersectionColourReg2 = input.color(color.new(#FFFF00, 0), "", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir2')
+showTrendlineIntersectionReg3 = input.bool(true, "Registry 3", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir3')
+trendlineIntersectionColourReg3 = input.color(color.new(#00FFFF, 0), "", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir3')
+showTrendlineIntersectionReg4 = input.bool(true, "Registry 4", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir4')
+trendlineIntersectionColourReg4 = input.color(color.new(#FF0000, 0), "", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir4')
+showTrendlineIntersectionReg5 = input.bool(true, "Registry 5", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir5')
+trendlineIntersectionColourReg5 = input.color(color.new(#FFFFFF, 0), "", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir5')
+showTrendlineIntersectionReg6 = input.bool(true, "Registry 6", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir6')
+trendlineIntersectionColourReg6 = input.color(color.new(#AD46FF, 0), "", group='TRENDLINE INTERSECTION RECTANGLES', inline='tir6')
 
 
-drawImbalance1  = input.bool(true, "Show imbalance lines?", group='VISUALS')
-drawEMAlines  = input.bool(false, "Show EMA trendlines?", group='VISUALS')
-showEMACrossMarkers = input.bool(false, "Show EMA Cross Markers", group='VISUALS')
-drawCrossRectangles = input.bool(true, "Show EMA Cross Rectangles?", group='VISUALS')
-
-
-showBoxK1K11 = input.bool(false, "K1-K11",  group='EMA CROSS RECTANGLES', inline='row6')
-showBoxK2K22 = input.bool(true, "K2-K22",  group='EMA CROSS RECTANGLES', inline='row6')
-showBoxK2K44 = input.bool(true, "K2-K44",  group='EMA CROSS RECTANGLES', inline='row6')
-showBoxK4K44 = input.bool(true, "K4-K44",  group='EMA CROSS RECTANGLES', inline='row6')
-showBoxK4K22 = input.bool(true, "K4-K22",  group='EMA CROSS RECTANGLES', inline='row6')
-showBoxK22K44 = input.bool(true, "K22-K44",  group='EMA CROSS RECTANGLES', inline='row7')
-showBoxK2K4 = input.bool(true, "K2-K4",  group='EMA CROSS RECTANGLES', inline='row8')
+showBoxK1K2   = input.bool(false, "K1-K2",  group='EMA CROSS RECTANGLES', inline='row1')
+showBoxK1K3   = input.bool(false, "K1-K3",  group='EMA CROSS RECTANGLES', inline='row1')
+showBoxK1K11  = input.bool(false, "K1-K11",  group='EMA CROSS RECTANGLES', inline='row2')
+showBoxK2K11  = input.bool(false, "K2-K11",  group='EMA CROSS RECTANGLES', inline='row2')
+showBoxK2K22  = input.bool(true,  "K2-K22",   group='EMA CROSS RECTANGLES', inline='row2')
+showBoxK2K33  = input.bool(false, "K2-K33",  group='EMA CROSS RECTANGLES', inline='row3')
+showBoxK2K44  = input.bool(false, "K2-K44",  group='EMA CROSS RECTANGLES', inline='row3')
+showBoxK4K44  = input.bool(true,  "K4-K44",  group='EMA CROSS RECTANGLES', inline='row3')
+showBoxK4K22  = input.bool(false, "K4-K22",  group='EMA CROSS RECTANGLES', inline='row4')
+showBoxK5K55  = input.bool(false, "K5-K55",  group='EMA CROSS RECTANGLES', inline='row4')
+showBoxK3K33  = input.bool(false, "K3-K33",  group='EMA CROSS RECTANGLES', inline='row4')
+showBoxK22K44 = input.bool(false, "K22-K44", group='EMA CROSS RECTANGLES', inline='row4')
+showBoxK2K3   = input.bool(true,  "K2-K3",  group='EMA CROSS RECTANGLES', inline='row8')
+showBoxK2K4   = input.bool(false, "K2-K4",  group='EMA CROSS RECTANGLES', inline='row8')
+showBoxK1K33  = input.bool(false, "K3-K33",  group='EMA CROSS RECTANGLES', inline='row9')
+showBoxK3K11  = input.bool(true,  "K3-K11",  group='EMA CROSS RECTANGLES', inline='row9')
+showBoxK11K33 = input.bool(false, "K11-K33",  group='EMA CROSS RECTANGLES', inline='row9')
 
 
 crossZoneProximityTicks = input.float(20.0, "Cross Rectangle Proximity Tolerance (ticks)", minval=0.0, step=0.01, group='EMA CROSS RECTANGLES', tooltip='Minimum distance (in ticks) a new cross rectangle must be from all existing ones. Rectangles closer than this distance will not be drawn.')
@@ -95,14 +169,30 @@ filterDojiCrossBox = input.bool(false, "Filter doji candles from cross boxes?", 
 crossBoxDojiOCpct  = input.float(60.0, "---> Doji OC% threshold (body/range)", minval=0.0, maxval=99.0, step=0.05, group='EMA CROSS RECTANGLES', tooltip='Cross rectangles will not be drawn on candles whose open-close body is below this percentage of the candle high-low range.')
 
 drawKbands    = input.bool(false, "Show K-bands?", group='VISUALS')
-drawEMAs      = input.bool(true, "Show EMAs?", group='VISUALS')
-drawShifties  = input.bool(true, "Show Shifties?", group='VISUALS')
-drawShiftiesColor = input.color(color.new(#0c3299, 0), "Shifties Color", group='VISUALS')
+drawEMAs      = input.bool(false, "Show EMAs?", group='VISUALS')
+drawShifties  = input.bool(true,  "Show Shifties?", group='VISUALS')
+drawShiftiesColor = input.color(color.new(#F52727, 0), "Shifties Color", group='VISUALS')
 drawPullbacks = input.bool(true, "Show Pullbacks?", group='VISUALS')
+
+emaK1K11crosscolour  = input.color(color.new(#FF69B4, 10), "EMA Cross K4-K22", group='EMA Rectangles')
+emaK2K22crosscolour  = input.color(color.new(#FFFF00, 10), "EMA Cross K2-K22", group='EMA Rectangles')
+emaK4K44crosscolour  = input.color(color.new(#FF0000, 10), "EMA Cross K4-K44", group='EMA Rectangles')
+emaK2K44crosscolour  = input.color(color.new(#ff6500, 10), "EMA Cross K2-K44", group='EMA Rectangles')
+emaK4K22crosscolour  = input.color(color.new(#ff6500, 10), "EMA Cross K4-K22", group='EMA Rectangles')
+emaK22K44crosscolour = input.color(color.new(#ff6500, 10), "EMA Cross K22-K44", group='EMA Rectangles')
+emaK3K33crosscolour  = input.color(color.new(#00FFFF, 10), "EMA Cross K3-K33", group='EMA Rectangles')
+emaK2K3crosscolour   = input.color(color.new(#00FFFF, 10), "EMA Cross K2-K3", group='EMA Rectangles')
+emaK2K4crosscolour   = input.color(color.new(#ff6500, 10), "EMA Cross K2-K4", group='EMA Rectangles')
+emaK1K2crosscolour   = input.color(color.new(#FF69B4, 30), "EMA Cross K1-K2", group='EMA Rectangles')
+emaK1K33crosscolour  = input.color(color.new(#FF69B4, 30), "EMA Cross K1-K33", group='EMA Rectangles')
+emaK1K3crosscolour   = input.color(color.new(#FF69B4, 30), "EMA Cross K1-K3", group='EMA Rectangles')
+emaK3K11crosscolour  = input.color(color.new(#C27AFF, 30), "EMA Cross K3-K11", group='EMA Rectangles')
+emaK11K33crosscolour = input.color(color.new(#C27AFF, 30), "EMA Cross K11-K33", group='EMA Rectangles')
+
+
 
 //earningsReportDays = input.bool(false, "Include Earnings report days?", minval=0.0, maxval=100, group='INPUTS')
 useWicksForAllBandCheck = input.bool(false, "Check wicks when peeking above all K-bands?")
-
 
 
 // K33 crossovers
@@ -184,15 +274,23 @@ f_fetchKC(_tf, _period, _mult) =>
 //─────────────────────────────────────────────
 [K1EMA,  K1Upper,  K1Lower]  = f_fetchKC(selectedperiod1, ema1_period, ema1_multi)
 [K2EMA,  K2Upper,  K2Lower]  = f_fetchKC(selectedperiod1, ema2_period, ema2_multi)
+
+// Second K2 band set on selectedperiod1b — used ONLY for the band-order
+// label engine (no plots). HTF-secure: signals confirm on TF2 candle close.
+[K2EMAb, K2Upperb, K2Lowerb] = f_fetchKC(selectedperiod1b, ema2_period, ema2_multi)
+tf2Time   = request.security(syminfo.tickerid, selectedperiod1b, time, lookahead=barmerge.lookahead_off)
+newTF2bar = tf2Time != tf2Time[1]
 [K3EMA,  K3Upper,  K3Lower]  = f_fetchKC(selectedperiod1, ema3_period, ema3_multi)
 [K4EMA,  K4Upper,  K4Lower]  = f_fetchKC(selectedperiod3, ema4_period, ema4_multi)
 [K5EMA,  K5Upper,  K5Lower]  = f_fetchKC(selectedperiod4, ema5_period, ema5_multi)
+[K6EMA,  K6Upper,  K6Lower]  = f_fetchKC(selectedperiod1, ema6_period, ema6_multi)
 
 [K11EMA, K11Upper, K11Lower] = f_fetchKC(selectedperiod2, ema1_period, ema1_multi)
 [K22EMA, K22Upper, K22Lower] = f_fetchKC(selectedperiod2, ema2_period, ema2_multi)
 [K33EMA, K33Upper, K33Lower] = f_fetchKC(selectedperiod2, ema3_period, ema3_multi)
 [K44EMA, K44Upper, K44Lower] = f_fetchKC(selectedperiod2, ema4_period, ema4_multi)
 [K55EMA, K55Upper, K55Lower] = f_fetchKC(selectedperiod2, ema5_period, ema5_multi)
+[K66EMA, K66Upper, K66Lower] = f_fetchKC(selectedperiod2, ema6_period, ema6_multi)
 
 //─────────────────────────────────────────────
 // Extra K3-based Keltner sets for D, 4H, M (multi-HTF broad match)
@@ -221,9 +319,14 @@ plot(K4EMA,   color=ema4colour,  title="K4 EMA",   linewidth=2, display=drawEMAs
 plot(K4Upper, color=ema4Kbands,  title="K4 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K4Lower, color=ema4Kbands,  title="K4 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
 
-plot(K5EMA,   color=ema5colour,  title="K5 EMA",  linewidth=2,  display=drawEMAs ? display.all : display.none)
+plot(K5EMA,   color=ema5colour,  title="K5 EMA",   linewidth=2, display=drawEMAs ? display.all : display.none)
 plot(K5Upper, color=ema5Kbands,  title="K5 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
 plot(K5Lower, color=ema5Kbands,  title="K5 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
+
+plot(K6EMA,   color=ema6colour,  title="K6 EMA",   linewidth=2, display=drawEMAs ? display.all : display.none)
+plot(K6Upper, color=ema6Kbands,  title="K6 Upper", linewidth=1, display=drawKbands ? display.all : display.none)
+plot(K6Lower, color=ema6Kbands,  title="K6 Lower", linewidth=1, display=drawKbands ? display.all : display.none)
+
 
 // 2D set (dotted)
 plot(K11EMA,   color=ema1colour,  title="K11 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
@@ -246,27 +349,64 @@ plot(K55EMA,   color=ema5colour,  title="K55 EMA",   linewidth=2, linestyle=plot
 plot(K55Upper, color=ema5Kbands,  title="K55 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 plot(K55Lower, color=ema5Kbands,  title="K55 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
+plot(K66EMA,   color=ema6colour,  title="K66 EMA",   linewidth=2, linestyle=plot.linestyle_dotted, display=drawEMAs ? display.all : display.none)
+plot(K66Upper, color=ema6Kbands,  title="K66 Upper", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
+plot(K66Lower, color=ema6Kbands,  title="K66 Lower", linewidth=1, linestyle=plot.linestyle_dotted, display=drawKbands ? display.all : display.none)
 
 
 //─────────────────────────────────────────────
 // EMA crossover definitions
 //─────────────────────────────────────────────
 crossEMAK1K2     = ta.cross(K1EMA, K2EMA)
-crossEMAK3K2     = ta.cross(K2EMA, K3EMA)
 crossEMAK1K3     = ta.cross(K1EMA, K3EMA)
+crossEMAK1K4     = ta.cross(K1EMA, K4EMA)
+crossEMAK1K5     = ta.cross(K1EMA, K5EMA)
+crossEMAK1K11    = ta.cross(K1EMA, K11EMA)
+crossEMAK1K22    = ta.cross(K1EMA, K22EMA)
+crossEMAK1K33    = ta.cross(K1EMA, K33EMA)
+crossEMAK1K44    = ta.cross(K1EMA, K44EMA)
+crossEMAK1K55    = ta.cross(K1EMA, K55EMA)
+crossEMAK2K3     = ta.cross(K2EMA, K3EMA)
 crossEMAK2K4     = ta.cross(K2EMA, K4EMA)
 crossEMAK2K5     = ta.cross(K2EMA, K5EMA)
-crossEMAK1K4     = ta.cross(K1EMA, K4EMA)
-crossEMAK3K4     = ta.cross(K3EMA, K4EMA)
-crossEMAK1K5     = ta.cross(K1EMA, K5EMA)
-crossEMAK3K5     = ta.cross(K3EMA, K5EMA)
-crossEMAK4K5     = ta.cross(K4EMA, K5EMA)
-crossEMAK1K11    = ta.cross(K1EMA, K11EMA)
+crossEMAK2K11    = ta.cross(K2EMA, K11EMA)
 crossEMAK2K22    = ta.cross(K2EMA, K22EMA)
-crossEMAK4K44    = ta.cross(K4EMA, K44EMA)
-crossEMAK4K22    = ta.cross(K4EMA, K22EMA)
+crossEMAK2K33    = ta.cross(K2EMA, K33EMA)
 crossEMAK2K44    = ta.cross(K2EMA, K44EMA)
+crossEMAK2K55    = ta.cross(K2EMA, K55EMA)
+crossEMAK3K4     = ta.cross(K3EMA, K4EMA)
+crossEMAK3K5     = ta.cross(K3EMA, K5EMA)
+crossEMAK3K11    = ta.cross(K3EMA, K11EMA)
+crossEMAK3K22    = ta.cross(K3EMA, K22EMA)
+crossEMAK3K33    = ta.cross(K3EMA, K33EMA)
+crossEMAK3K44    = ta.cross(K3EMA, K44EMA)
+crossEMAK3K55    = ta.cross(K3EMA, K55EMA)
+crossEMAK4K5     = ta.cross(K4EMA, K5EMA)
+crossEMAK4K11    = ta.cross(K4EMA, K11EMA)
+crossEMAK4K22    = ta.cross(K4EMA, K22EMA)
+crossEMAK4K33    = ta.cross(K4EMA, K33EMA)
+crossEMAK4K44    = ta.cross(K4EMA, K44EMA)
+crossEMAK4K55    = ta.cross(K4EMA, K55EMA)
+crossEMAK5K11    = ta.cross(K5EMA, K11EMA)
+crossEMAK5K22    = ta.cross(K5EMA, K22EMA)
+crossEMAK5K33    = ta.cross(K5EMA, K33EMA)
+crossEMAK5K44    = ta.cross(K5EMA, K44EMA)
+crossEMAK5K55    = ta.cross(K5EMA, K55EMA)
+crossEMAK11K22   = ta.cross(K11EMA, K22EMA)
+crossEMAK11K33   = ta.cross(K11EMA, K33EMA)
+crossEMAK11K44   = ta.cross(K11EMA, K44EMA)
+crossEMAK11K55   = ta.cross(K11EMA, K55EMA)
+crossEMAK22K33   = ta.cross(K22EMA, K33EMA)
 crossEMAK22K44   = ta.cross(K22EMA, K44EMA)
+crossEMAK22K55   = ta.cross(K22EMA, K55EMA)
+crossEMAK33K44   = ta.cross(K33EMA, K44EMA)
+crossEMAK33K55   = ta.cross(K33EMA, K55EMA)
+crossEMAK44K55   = ta.cross(K44EMA, K55EMA)
+
+// Backwards-compatible alias used by the existing marker plot below.
+crossEMAK3K2     = crossEMAK2K3
+
+
 
 
 //─────────────────────────────────────────
@@ -274,41 +414,133 @@ crossEMAK22K44   = ta.cross(K22EMA, K44EMA)
 // Uses two horizontal lines + linefill so the zone can extend.right,
 // avoiding large future bar_index projection limits from box.new().
 //─────────────────────────────────────────
-var line[] crossZoneTopLines = array.new_line()
-var line[] crossZoneBotLines = array.new_line()
-var linefill[] crossZoneFills = array.new_linefill()
-var float[] crossZoneTops = array.new_float()
-var float[] crossZoneBots = array.new_float()
 const int MAX_CROSS_ZONES = 120   // each zone uses 2 lines + 1 linefill; keep margin below TV line limits
+var line[] crossZoneTopLines = array.new_line(MAX_CROSS_ZONES)
+var line[] crossZoneBotLines = array.new_line(MAX_CROSS_ZONES)
+var linefill[] crossZoneFills = array.new_linefill(MAX_CROSS_ZONES)
+var float[] crossZoneTops = array.new_float(MAX_CROSS_ZONES, na)
+var float[] crossZoneBots = array.new_float(MAX_CROSS_ZONES, na)
+var int[] crossZoneSlotState = array.new_int(1, 0)
+var int[] crossZoneCountState = array.new_int(1, 0)
+
+// Separate lightweight registry for rectangles drawn while
+// drawCrossRectanglesOverlapping is enabled. These are never checked
+// for overlap/proximity against anything, but are still tracked here
+// purely so they get cleaned up (FIFO) once the drawable-object limits
+// are approached, same as the regular cross-zone registry above.
+const int MAX_OVERLAP_ZONES = 120   // each zone uses 2 lines + 1 linefill; keep margin below TV line limits
+var line[] overlapZoneTopLines = array.new_line(MAX_OVERLAP_ZONES)
+var line[] overlapZoneBotLines = array.new_line(MAX_OVERLAP_ZONES)
+var linefill[] overlapZoneFills = array.new_linefill(MAX_OVERLAP_ZONES)
+var int[] overlapZoneSlotState = array.new_int(1, 0)
+
+const int MAX_TREND_INTERSECTION_ZONES = 120
+var line[] trendIntersectionTopLines = array.new_line(MAX_TREND_INTERSECTION_ZONES)
+var line[] trendIntersectionBotLines = array.new_line(MAX_TREND_INTERSECTION_ZONES)
+var linefill[] trendIntersectionFills = array.new_linefill(MAX_TREND_INTERSECTION_ZONES)
+var float[] trendIntersectionTops = array.new_float(MAX_TREND_INTERSECTION_ZONES, na)
+var float[] trendIntersectionBots = array.new_float(MAX_TREND_INTERSECTION_ZONES, na)
+var int[] trendIntersectionSlotState = array.new_int(1, 0)
+var int[] trendIntersectionCountState = array.new_int(1, 0)
+
+// Creates or reuses a pooled two-line/linefill zone slot. This avoids repeated
+// line.new()/linefill.new() churn and prevents TradingView's drawing caps from
+// being exceeded before the script's own fixed-size pools are recycled.
+f_drawPooledCrossZone(line[] _topLines, line[] _botLines, linefill[] _fills, int _slot, float _top, float _bot, color _col) =>
+    topLine = array.get(_topLines, _slot)
+    botLine = array.get(_botLines, _slot)
+    zoneFill = array.get(_fills, _slot)
+    if na(topLine)
+        topLine := line.new(bar_index, _top, bar_index + 1, _top, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=1)
+        array.set(_topLines, _slot, topLine)
+    else
+        line.set_xy1(topLine, bar_index, _top)
+        line.set_xy2(topLine, bar_index + 1, _top)
+        line.set_extend(topLine, extend.right)
+        line.set_color(topLine, _col)
+        line.set_style(topLine, line.style_solid)
+        line.set_width(topLine, 1)
+    if na(botLine)
+        botLine := line.new(bar_index, _bot, bar_index + 1, _bot, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=1)
+        array.set(_botLines, _slot, botLine)
+    else
+        line.set_xy1(botLine, bar_index, _bot)
+        line.set_xy2(botLine, bar_index + 1, _bot)
+        line.set_extend(botLine, extend.right)
+        line.set_color(botLine, _col)
+        line.set_style(botLine, line.style_solid)
+        line.set_width(botLine, 1)
+    if na(zoneFill)
+        zoneFill := linefill.new(topLine, botLine, color.new(_col, 75))
+        array.set(_fills, _slot, zoneFill)
+    else
+        linefill.set_color(zoneFill, color.new(_col, 75))
 
 // Returns true when the candidate zone overlaps any already-drawn
 // EMA crossover zone in price. Since existing zones extend.right,
 // any later zone with overlapping price would visually overlap.
 // First-drawn zones take precedence because overlapping new ones are skipped.
 f_crossZoneOverlapsRegistry(_top, _bot) =>
-    sz = array.size(crossZoneTops)
+    candidateTop = math.max(_top, _bot)
+    candidateBot = math.min(_top, _bot)
+    sz = array.get(crossZoneCountState, 0)
     hit = false
     if sz > 0
         for i = 0 to sz - 1
             existingTop = array.get(crossZoneTops, i)
             existingBot = array.get(crossZoneBots, i)
-            priceRangeOverlaps = _bot <= existingTop and _top >= existingBot
+            priceRangeOverlaps = not na(existingTop) and not na(existingBot) and candidateBot <= existingTop and candidateTop >= existingBot
             if priceRangeOverlaps
                 hit := true
     hit
 
-f_trackCrossZone(_topLine, _botLine, _fill, _top, _bot) =>
-    array.push(crossZoneTopLines, _topLine)
-    array.push(crossZoneBotLines, _botLine)
-    array.push(crossZoneFills, _fill)
-    array.push(crossZoneTops, _top)
-    array.push(crossZoneBots, _bot)
-    if array.size(crossZoneTopLines) > MAX_CROSS_ZONES
-        line.delete(array.shift(crossZoneTopLines))
-        line.delete(array.shift(crossZoneBotLines))
-        linefill.delete(array.shift(crossZoneFills))
-        array.shift(crossZoneTops)
-        array.shift(crossZoneBots)
+// Returns true when the candidate zone overlaps any already-drawn
+// trendline-intersection zone in price. Since existing zones extend.right,
+// any later zone with overlapping price would visually overlap.
+// First-drawn zones take precedence because overlapping new ones are skipped.
+f_trendZoneOverlapsRegistry(_top, _bot) =>
+    candidateTop = math.max(_top, _bot)
+    candidateBot = math.min(_top, _bot)
+    sz = array.get(trendIntersectionCountState, 0)
+    hit = false
+    if sz > 0
+        for i = 0 to sz - 1
+            existingTop = array.get(trendIntersectionTops, i)
+            existingBot = array.get(trendIntersectionBots, i)
+            priceRangeOverlaps = not na(existingTop) and not na(existingBot) and candidateBot <= existingTop and candidateTop >= existingBot
+            if priceRangeOverlaps
+                hit := true
+    hit
+
+f_trackCrossZone(_top, _bot, _col) =>
+    registeredTop = math.max(_top, _bot)
+    registeredBot = math.min(_top, _bot)
+    slot = array.get(crossZoneSlotState, 0)
+    count = array.get(crossZoneCountState, 0)
+    f_drawPooledCrossZone(crossZoneTopLines, crossZoneBotLines, crossZoneFills, slot, _top, _bot, _col)
+    array.set(crossZoneTops, slot, registeredTop)
+    array.set(crossZoneBots, slot, registeredBot)
+    array.set(crossZoneSlotState, 0, (slot + 1) % MAX_CROSS_ZONES)
+    array.set(crossZoneCountState, 0, math.min(count + 1, MAX_CROSS_ZONES))
+
+// Tracks a cross rectangle drawn while overlap-checking is disabled, so it
+// can still be FIFO-cleaned once MAX_OVERLAP_ZONES is exceeded, without
+// ever participating in overlap/proximity checks.
+f_trackOverlappingCrossZone(_top, _bot, _col) =>
+    slot = array.get(overlapZoneSlotState, 0)
+    f_drawPooledCrossZone(overlapZoneTopLines, overlapZoneBotLines, overlapZoneFills, slot, _top, _bot, _col)
+    array.set(overlapZoneSlotState, 0, (slot + 1) % MAX_OVERLAP_ZONES)
+
+f_trackTrendIntersectionZone(_top, _bot, _col) =>
+    registeredTop = math.max(_top, _bot)
+    registeredBot = math.min(_top, _bot)
+    slot = array.get(trendIntersectionSlotState, 0)
+    count = array.get(trendIntersectionCountState, 0)
+    f_drawPooledCrossZone(trendIntersectionTopLines, trendIntersectionBotLines, trendIntersectionFills, slot, _top, _bot, _col)
+    array.set(trendIntersectionTops, slot, registeredTop)
+    array.set(trendIntersectionBots, slot, registeredBot)
+    array.set(trendIntersectionSlotState, 0, (slot + 1) % MAX_TREND_INTERSECTION_ZONES)
+    array.set(trendIntersectionCountState, 0, math.min(count + 1, MAX_TREND_INTERSECTION_ZONES))
 
 // Returns true when the candidate zone (_top/_bot) lies within _tolerance
 // price distance of any already-drawn EMA crossover zone. This lets the
@@ -316,7 +548,9 @@ f_trackCrossZone(_topLine, _botLine, _fill, _top, _bot) =>
 // rectangles are not drawn too close to existing ones, independent of
 // the price-range overlap check performed by f_crossZoneOverlapsRegistry.
 f_crossZoneWithinProximity(_top, _bot, _tolerance) =>
-    sz  = array.size(crossZoneTops)
+    candidateTop = math.max(_top, _bot)
+    candidateBot = math.min(_top, _bot)
+    sz  = array.get(crossZoneCountState, 0)
     hit = false
     if sz > 0 and _tolerance > 0
         for i = 0 to sz - 1
@@ -324,39 +558,169 @@ f_crossZoneWithinProximity(_top, _bot, _tolerance) =>
             existingBot = array.get(crossZoneBots, i)
             // Distance between the candidate zone and the existing zone.
             // 0 when the ranges overlap, otherwise the gap between them.
-            gap = _bot > existingTop ? _bot - existingTop : (existingBot > _top ? existingBot - _top : 0.0)
-            if gap < _tolerance
+            gap = not na(existingTop) and not na(existingBot) ? (candidateBot > existingTop ? candidateBot - existingTop : (existingBot > candidateTop ? existingBot - candidateTop : 0.0)) : na
+            if not na(gap) and gap < _tolerance
                 hit := true
     hit
 
+// Draws a right-extended candle-origin zone on the first bar of a continuous
+// ordered-band series. Bands are supplied from top to bottom; up to 8 bands are
+// supported. The first na band ends the comparison list, so explicit trailing
+// na arguments can be used for shorter definitions.
+f_drawOrderedZone(color _col, float _band1, float _band2, float _band3, float _band4, float _band5, float _band6, float _band7, float _band8) =>
+    activeBands = 0
+    activeBands := not na(_band1) ? 1 : activeBands
+    activeBands := activeBands == 1 and not na(_band2) ? 2 : activeBands
+    activeBands := activeBands == 2 and not na(_band3) ? 3 : activeBands
+    activeBands := activeBands == 3 and not na(_band4) ? 4 : activeBands
+    activeBands := activeBands == 4 and not na(_band5) ? 5 : activeBands
+    activeBands := activeBands == 5 and not na(_band6) ? 6 : activeBands
+    activeBands := activeBands == 6 and not na(_band7) ? 7 : activeBands
+    activeBands := activeBands == 7 and not na(_band8) ? 8 : activeBands
+
+    orderOK = activeBands >= 2
+    orderOK := orderOK and (activeBands < 2 or _band1 > _band2)
+    orderOK := orderOK and (activeBands < 3 or _band2 > _band3)
+    orderOK := orderOK and (activeBands < 4 or _band3 > _band4)
+    orderOK := orderOK and (activeBands < 5 or _band4 > _band5)
+    orderOK := orderOK and (activeBands < 6 or _band5 > _band6)
+    orderOK := orderOK and (activeBands < 7 or _band6 > _band7)
+    orderOK := orderOK and (activeBands < 8 or _band7 > _band8)
+
+    firstInSeries = orderOK and not orderOK[1]
+    peekPrice = orderedZonePeekUseWick ? high : math.max(open, close)
+    peekOK = false
+    peekOK := peekOK or (not na(_band1) and peekPrice > _band1)
+    peekOK := peekOK or (not na(_band2) and peekPrice > _band2)
+    peekOK := peekOK or (not na(_band3) and peekPrice > _band3)
+    peekOK := peekOK or (not na(_band4) and peekPrice > _band4)
+    peekOK := peekOK or (not na(_band5) and peekPrice > _band5)
+    peekOK := peekOK or (not na(_band6) and peekPrice > _band6)
+    peekOK := peekOK or (not na(_band7) and peekPrice > _band7)
+    peekOK := peekOK or (not na(_band8) and peekPrice > _band8)
+    peekRequirementMet = not orderedZonesRequirePeek or peekOK
+    didDrawOrderedZone = false
+    if firstInSeries and drawOrderedZones and peekRequirementMet
+        innerA = activeBands <= 2 ? _band1 : activeBands <= 4 ? _band2 : activeBands <= 6 ? _band3 : _band4
+        innerB = activeBands <= 2 ? _band2 : activeBands <= 4 ? _band3 : activeBands <= 6 ? _band4 : _band5
+        _crossPrice = (innerA + innerB) / 2
+        bodyTop = math.max(open, close)
+        bodyBot = math.min(open, close)
+        distHigh = math.abs(high - _crossPrice)
+        distLow = math.abs(low - _crossPrice)
+        distOpen = math.abs(open - _crossPrice)
+        distClose = math.abs(close - _crossPrice)
+        farthestWickIsHigh = distHigh >= distLow
+        closestWickIsHigh = distHigh <= distLow
+        farthestBody = distOpen >= distClose ? open : close
+        closestBody = distOpen <= distClose ? open : close
+        newTop = orderedRectangleOrigin == "Far Wick" ? math.max(farthestWickIsHigh ? high : low, farthestBody) : orderedRectangleOrigin == "Near Wick" ? math.max(closestWickIsHigh ? high : low, closestBody) : orderedRectangleOrigin == "High/Low" ? high : bodyTop
+        newBot = orderedRectangleOrigin == "Far Wick" ? math.min(farthestWickIsHigh ? high : low, farthestBody) : orderedRectangleOrigin == "Near Wick" ? math.min(closestWickIsHigh ? high : low, closestBody) : orderedRectangleOrigin == "High/Low" ? low : bodyBot
+        if drawCrossRectanglesOverlapping
+            f_trackOverlappingCrossZone(newTop, newBot, _col)
+            didDrawOrderedZone := true
+        else
+            if not f_crossZoneOverlapsRegistry(newTop, newBot) and not f_crossZoneWithinProximity(newTop, newBot, crossZoneProximityTicks * syminfo.mintick)
+                f_trackCrossZone(newTop, newBot, _col)
+                didDrawOrderedZone := true
+    didDrawOrderedZone
+
+
+// Definitions for marking candles where K-bands appear in desired order (matched downwards). Eights inputs must be specified, so fill any used slots with the text string "na"
+
+//bandOrder1  = f_drawOrderedZone(color.new(#AD46FF, 0), K66Upper, K6Upper, K55Upper, K5Upper, na, na, na, na)
+//bandOrder2  = f_drawOrderedZone(color.new(#AD46FF, 0), K5Lower, K55Lower, K6Lower, K66Lower, na, na, na, na)
+//bandOrder3  = f_drawOrderedZone(color.new(#AD46FF, 0), K5Lower, K55Lower, K6Lower, K66Lower, na, na, na, na)
+
+bandOrder4  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K3Upper, na, na, na, na, na, na)
+bandOrder5  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K3Lower, na, na, na, na, na, na)
+bandOrder6  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K33Upper, na, na, na, na, na, na)
+bandOrder7  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K33Lower, na, na, na, na, na, na)
+
+bandOrder8  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K3Upper, na, na, na, na, na, na)
+bandOrder9  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K3Lower, na, na, na, na, na, na)
+bandOrder10 = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K33Upper, na, na, na, na, na, na)
+bandOrder11 = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K33Lower, na, na, na, na, na, na)
+
+bandOrder12 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K3Upper, na, na, na, na, na, na)
+bandOrder13 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K3Lower, na, na, na, na, na, na)
+bandOrder14 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K33Upper, na, na, na, na, na, na)
+bandOrder15 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K33Lower, na, na, na, na, na, na)
+
+bandOrder16 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K3Upper, na, na, na, na, na, na)
+bandOrder17 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K3Lower, na, na, na, na, na, na)
+bandOrder18 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K33Upper, na, na, na, na, na, na)
+bandOrder19 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K33Lower, na, na, na, na, na, na)
+
+bandOrder20 = f_drawOrderedZone(color.new(#FFFFFF, 0), K5Upper, K55Upper, na, na, na, na, na, na)
+bandOrder21 = f_drawOrderedZone(color.new(#FFFFFF, 0), K5Upper, K55Lower, na, na, na, na, na, na)
+bandOrder22 = f_drawOrderedZone(color.new(#27EEF5, 0), K3Upper, K33Upper, na, na, na, na, na, na)
+bandOrder23 = f_drawOrderedZone(color.new(#27EEF5, 0), K3Upper, K33Lower, na, na, na, na, na, na)
+
+
+
+
 // Name kept for compatibility with the existing f_drawCrossBox(...) calls.
-f_drawCrossBox(_cond, _col) =>
+f_drawCrossBox(_cond, _col, _emaA, _emaB) =>
+    _crossPrice = (_emaA + _emaB) / 2
     // Doji filter: skip drawing the box when the current candle's open-close
     // body is below the configured percentage of the candle's high-low range,
     // but only when filterDojiCrossBox is enabled.
     candleRangeCrossBox = high - low
     ocPctCrossBox = candleRangeCrossBox > 0 ? math.abs(close - open) / candleRangeCrossBox * 100.0 : 100.0
     isDojiCrossBox = filterDojiCrossBox and (ocPctCrossBox < crossBoxDojiOCpct)
+    didDrawCrossBox = false
     if _cond and drawCrossRectangles and not isDojiCrossBox
-        newTop = math.max(open, close)
-        newBot = math.min(open, close)
-        if not f_crossZoneOverlapsRegistry(newTop, newBot) and not f_crossZoneWithinProximity(newTop, newBot, crossZoneProximityTicks * syminfo.mintick)
-            topLine = line.new(bar_index, newTop, bar_index + 1, newTop, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=1)
-            botLine = line.new(bar_index, newBot, bar_index + 1, newBot, xloc=xloc.bar_index, extend=extend.right, color=_col, style=line.style_solid, width=1)
-            zoneFill = linefill.new(topLine, botLine, color.new(_col, 75))
-            f_trackCrossZone(topLine, botLine, zoneFill, newTop, newBot)
+        bodyTop = math.max(open, close)
+        bodyBot = math.min(open, close)
+        distHigh = math.abs(high - _crossPrice)
+        distLow = math.abs(low - _crossPrice)
+        distOpen = math.abs(open - _crossPrice)
+        distClose = math.abs(close - _crossPrice)
+        farthestWickIsHigh = distHigh >= distLow
+        closestWickIsHigh = distHigh <= distLow
+        farthestBody = distOpen >= distClose ? open : close
+        closestBody = distOpen <= distClose ? open : close
+        newTop = crossRectangleOrigin == "Far Wick" ? math.max(farthestWickIsHigh ? high : low, farthestBody) : crossRectangleOrigin == "Near Wick" ? math.max(closestWickIsHigh ? high : low, closestBody) : crossRectangleOrigin == "High/Low" ? high : bodyTop
+        newBot = crossRectangleOrigin == "Far Wick" ? math.min(farthestWickIsHigh ? high : low, farthestBody) : crossRectangleOrigin == "Near Wick" ? math.min(closestWickIsHigh ? high : low, closestBody) : crossRectangleOrigin == "High/Low" ? low : bodyBot
+        if drawCrossRectanglesOverlapping
+            // Overlap checking disabled: draw the rectangle unconditionally.
+            // It is NOT registered in the overlap/proximity tracking arrays,
+            // so it never blocks (or is blocked by) other cross rectangles.
+            // It uses a separate fixed-size reusable pool so drawing limits
+            // cannot be exceeded by repeated line/linefill creation.
+            f_trackOverlappingCrossZone(newTop, newBot, _col)
+            didDrawCrossBox := true
+        else
+            if not f_crossZoneOverlapsRegistry(newTop, newBot) and not f_crossZoneWithinProximity(newTop, newBot, crossZoneProximityTicks * syminfo.mintick)
+                f_trackCrossZone(newTop, newBot, _col)
+                didDrawCrossBox := true
+    didDrawCrossBox
 
 
 // DEFINITIONS
-// f_drawCrossBox(crossEMAK1K2 and showBoxK1K2, ema1crosscolour)
-f_drawCrossBox(crossEMAK1K11 and showBoxK1K11, ema1crosscolour)
-f_drawCrossBox(crossEMAK2K22 and showBoxK2K22, ema2crosscolour)
-f_drawCrossBox(crossEMAK4K44 and showBoxK4K44, ema4crosscolour)
-f_drawCrossBox(crossEMAK2K44 and showBoxK2K44, emaK4K22crosscolour)
-f_drawCrossBox(crossEMAK4K22 and showBoxK4K22, emaK4K22crosscolour)
-f_drawCrossBox(crossEMAK22K44 and showBoxK22K44, emaK22K44crosscolour)
+// f_drawCrossBox(crossEMAK1K2 and showBoxK1K2, ema1crosscolour, K1EMA, K2EMA)
+f_drawCrossBox(crossEMAK1K11 and showBoxK1K11, emaK1K11crosscolour, K1EMA, K11EMA)
+f_drawCrossBox(crossEMAK2K22 and showBoxK2K22, emaK2K22crosscolour, K2EMA, K22EMA)
+f_drawCrossBox(crossEMAK2K11 and showBoxK2K11, emaK2K22crosscolour, K2EMA, K11EMA)
 
-f_drawCrossBox(crossEMAK2K4 and showBoxK2K4, emaK22K44crosscolour)
+f_drawCrossBox(crossEMAK4K44 and showBoxK4K44, emaK4K44crosscolour, K4EMA, K44EMA)
+f_drawCrossBox(crossEMAK2K44 and showBoxK2K44, emaK2K44crosscolour, K2EMA, K44EMA)
+f_drawCrossBox(crossEMAK4K22 and showBoxK4K22, emaK4K22crosscolour, K4EMA, K22EMA)
+f_drawCrossBox(crossEMAK22K44 and showBoxK22K44, emaK22K44crosscolour, K22EMA, K44EMA)
+f_drawCrossBox(crossEMAK2K4 and showBoxK2K4, emaK2K4crosscolour, K2EMA, K4EMA)
+f_drawCrossBox(crossEMAK3K33 and showBoxK3K33, emaK3K33crosscolour, K3EMA, K33EMA)
+f_drawCrossBox(crossEMAK1K33 and showBoxK1K33, emaK4K22crosscolour, K1EMA, K33EMA)
+f_drawCrossBox(crossEMAK1K3 and showBoxK1K3, emaK4K22crosscolour, K1EMA, K3EMA)
+f_drawCrossBox(crossEMAK3K11 and showBoxK3K11, emaK4K22crosscolour, K3EMA, K11EMA)
+f_drawCrossBox(crossEMAK11K33 and showBoxK11K33, emaK4K22crosscolour, K11EMA, K33EMA)
+f_drawCrossBox(crossEMAK2K33 and showBoxK2K33, emaK2K22crosscolour, K2EMA, K33EMA)
+f_drawCrossBox(crossEMAK2K3 and showBoxK2K3, emaK2K3crosscolour, K2EMA, K3EMA)
+f_drawCrossBox(crossEMAK1K2 and showBoxK1K2, emaK1K2crosscolour, K1EMA, K2EMA)
+
+f_drawCrossBox(crossEMAK5K55 and showBoxK5K55, emaK2K22crosscolour, K5EMA, K55EMA)
+
+
 
 
 
@@ -447,9 +811,13 @@ f_gapPeek(_o, _c, _u1, _l1, _u2, _l2, _col) =>
     prevBelowBoth = _o < _u1[1] and _o < _u2[1]
     prevAboveBoth = _c > _l1[1] and _c > _l2[1]
 
+    // Single-band case: both band args identical (e.g., K6/K6) means
+    // there is no zone to gap "into" — treat as a direct cross of the band.
+    isSingleBand = (_u1 == _u2) and (_l1 == _l2)
+
     // Peek conditions
-    peekUp   = prevBelowBoth and _o > upperLow and _o < upperHigh
-    peekDown = prevAboveBoth and _c < lowerHigh and _c > lowerLow
+    peekUp   = isSingleBand ? (_c[1] < _u1[1] and _o >= _u1) : (prevBelowBoth and _o > upperLow and _o < upperHigh)
+    peekDown = isSingleBand ? (_c[1] > _l1[1] and _c <= _l1) : (prevAboveBoth and _c < lowerHigh and _c > lowerLow)
 
     // Execute drawing
     if (peekDown and drawSRgreen)
@@ -474,6 +842,13 @@ f_gapPeek(_o, _c, _u1, _l1, _u2, _l2, _col) =>
 [peekUp1, peekDown1] = f_gapPeek(gapOpen, gapClose, K1Upper, K1Lower, K2Upper, K2Lower, orderblockcolour1)
 [peekUp2, peekDown2] = f_gapPeek(gapOpen, gapClose, K2Upper, K2Lower, K1Upper, K1Lower, orderblockcolour1)
 
+//  [peekUp4, peekDown4] = f_gapPeek(gapOpen, gapClose, K4Upper, K4Lower, K4Upper, K4Lower, orderblockcolour4)
+// [peekUp44, peekDown44] = f_gapPeek(gapOpen, gapClose, K44Upper, K44Lower, K44Upper, K44Lower, orderblockcolour44)
+
+// [peekUp6, peekDown6] = f_gapPeek(gapOpen, gapClose, K6Upper, K6Lower, K6Upper, K6Lower, orderblockcolour6)
+
+
+
 // These need refining
 //[peekUp3, peekDown3] = f_gapPeek(gapOpen, gapClose, K5Upper, K5Lower, K22Upper, K22Lower, color.new(#0084ff, 0))
 //[peekUp4, peekDown4] = f_gapPeek(gapOpen, gapClose, K22Upper, K22Lower, K5Upper, K5Lower, color.new(#0084ff, 0))
@@ -486,66 +861,302 @@ f_gapPeek(_o, _c, _u1, _l1, _u2, _l2, _col) =>
 // EMA Cross Markers
 //─────────────────────────────────────────────
 plotK1K2cross = showEMACrossMarkers ? (crossEMAK1K2 ? K1EMA : na) : na
-plotK3K2cross = showEMACrossMarkers ? (crossEMAK3K2 ? K3EMA : na) : na
-plotK1K3cross = showEMACrossMarkers ? (crossEMAK1K3 ? K3EMA : na) : na
-plotK2K4cross = showEMACrossMarkers ? (crossEMAK2K4 ? K3EMA : na) : na
-plotK2K5cross = showEMACrossMarkers ? (crossEMAK2K5 ? K3EMA : na) : na
-plotK1K4cross = showEMACrossMarkers ? (crossEMAK1K4 ? K3EMA : na) : na
+plotK1K3cross = showEMACrossMarkers ? (crossEMAK1K3 ? K1EMA : na) : na
+plotK1K4cross = showEMACrossMarkers ? (crossEMAK1K4 ? K1EMA : na) : na
+plotK1K5cross = showEMACrossMarkers ? (crossEMAK1K5 ? K1EMA : na) : na
+plotK1K11cross = showEMACrossMarkers ? (crossEMAK1K11 ? K1EMA : na) : na
+plotK1K22cross = showEMACrossMarkers ? (crossEMAK1K22 ? K1EMA : na) : na
+plotK1K33cross = showEMACrossMarkers ? (crossEMAK1K33 ? K1EMA : na) : na
+plotK1K44cross = showEMACrossMarkers ? (crossEMAK1K44 ? K1EMA : na) : na
+plotK1K55cross = showEMACrossMarkers ? (crossEMAK1K55 ? K1EMA : na) : na
+plotK2K3cross = showEMACrossMarkers ? (crossEMAK2K3 ? K2EMA : na) : na
+plotK2K4cross = showEMACrossMarkers ? (crossEMAK2K4 ? K2EMA : na) : na
+plotK2K5cross = showEMACrossMarkers ? (crossEMAK2K5 ? K2EMA : na) : na
+plotK2K11cross = showEMACrossMarkers ? (crossEMAK2K11 ? K2EMA : na) : na
+plotK2K22cross = showEMACrossMarkers ? (crossEMAK2K22 ? K2EMA : na) : na
+plotK2K33cross = showEMACrossMarkers ? (crossEMAK2K33 ? K2EMA : na) : na
+plotK2K44cross = showEMACrossMarkers ? (crossEMAK2K44 ? K2EMA : na) : na
+plotK2K55cross = showEMACrossMarkers ? (crossEMAK2K55 ? K2EMA : na) : na
 plotK3K4cross = showEMACrossMarkers ? (crossEMAK3K4 ? K3EMA : na) : na
-plotK1K5cross = showEMACrossMarkers ? (crossEMAK1K5 ? K3EMA : na) : na
 plotK3K5cross = showEMACrossMarkers ? (crossEMAK3K5 ? K3EMA : na) : na
-plotK4K5cross = showEMACrossMarkers ? (crossEMAK4K5 ? K3EMA : na) : na
+plotK3K11cross = showEMACrossMarkers ? (crossEMAK3K11 ? K3EMA : na) : na
+plotK3K22cross = showEMACrossMarkers ? (crossEMAK3K22 ? K3EMA : na) : na
+plotK3K33cross = showEMACrossMarkers ? (crossEMAK3K33 ? K3EMA : na) : na
+plotK3K44cross = showEMACrossMarkers ? (crossEMAK3K44 ? K3EMA : na) : na
+plotK3K55cross = showEMACrossMarkers ? (crossEMAK3K55 ? K3EMA : na) : na
+plotK4K5cross = showEMACrossMarkers ? (crossEMAK4K5 ? K4EMA : na) : na
+plotK4K11cross = showEMACrossMarkers ? (crossEMAK4K11 ? K4EMA : na) : na
+plotK4K22cross = showEMACrossMarkers ? (crossEMAK4K22 ? K4EMA : na) : na
+plotK4K33cross = showEMACrossMarkers ? (crossEMAK4K33 ? K4EMA : na) : na
+plotK4K44cross = showEMACrossMarkers ? (crossEMAK4K44 ? K4EMA : na) : na
+plotK4K55cross = showEMACrossMarkers ? (crossEMAK4K55 ? K4EMA : na) : na
+plotK5K11cross = showEMACrossMarkers ? (crossEMAK5K11 ? K5EMA : na) : na
+plotK5K22cross = showEMACrossMarkers ? (crossEMAK5K22 ? K5EMA : na) : na
+plotK5K33cross = showEMACrossMarkers ? (crossEMAK5K33 ? K5EMA : na) : na
+plotK5K44cross = showEMACrossMarkers ? (crossEMAK5K44 ? K5EMA : na) : na
+plotK5K55cross = showEMACrossMarkers ? (crossEMAK5K55 ? K5EMA : na) : na
+plotK11K22cross = showEMACrossMarkers ? (crossEMAK11K22 ? K11EMA : na) : na
+plotK11K33cross = showEMACrossMarkers ? (crossEMAK11K33 ? K11EMA : na) : na
+plotK11K44cross = showEMACrossMarkers ? (crossEMAK11K44 ? K11EMA : na) : na
+plotK11K55cross = showEMACrossMarkers ? (crossEMAK11K55 ? K11EMA : na) : na
+plotK22K33cross = showEMACrossMarkers ? (crossEMAK22K33 ? K22EMA : na) : na
+plotK22K44cross = showEMACrossMarkers ? (crossEMAK22K44 ? K22EMA : na) : na
+plotK22K55cross = showEMACrossMarkers ? (crossEMAK22K55 ? K22EMA : na) : na
+plotK33K44cross = showEMACrossMarkers ? (crossEMAK33K44 ? K33EMA : na) : na
+plotK33K55cross = showEMACrossMarkers ? (crossEMAK33K55 ? K33EMA : na) : na
+plotK44K55cross = showEMACrossMarkers ? (crossEMAK44K55 ? K44EMA : na) : na
 
-plotshape(plotK1K2cross, title="K1-K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK3K2cross, title="K3-K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK1K3cross, title="K1-K3 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK2K4cross, title="K2-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK2K5cross, title="K2-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK1K4cross, title="K1-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK3K4cross, title="K3-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK1K5cross, title="K1-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK3K5cross, title="K3-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
-plotshape(plotK4K5cross, title="K4-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// Backwards-compatible marker-series alias for the existing K3-K2 naming.
+plotK3K2cross = showEMACrossMarkers ? (crossEMAK3K2 ? K3EMA : na) : na
 
+// plotshape(plotK1K2cross, title="K1-K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K3cross, title="K1-K3 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K4cross, title="K1-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K5cross, title="K1-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K11cross, title="K1-K11 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K22cross, title="K1-K22 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K33cross, title="K1-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K44cross, title="K1-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK1K55cross, title="K1-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK2K3cross, title="K2-K3 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K4cross, title="K2-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K5cross, title="K2-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K11cross, title="K2-K11 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K22cross, title="K2-K22 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K33cross, title="K2-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K44cross, title="K2-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK2K55cross, title="K2-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K4cross, title="K3-K4 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K5cross, title="K3-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K11cross, title="K3-K11 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K22cross, title="K3-K22 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K33cross, title="K3-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K44cross, title="K3-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K55cross, title="K3-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK4K5cross, title="K4-K5 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK4K11cross, title="K4-K11 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK4K22cross, title="K4-K22 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK4K33cross, title="K4-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK4K44cross, title="K4-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema4crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK4K55cross, title="K4-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK5K11cross, title="K5-K11 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK5K22cross, title="K5-K22 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK5K33cross, title="K5-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK5K44cross, title="K5-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK5K55cross, title="K5-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK11K22cross, title="K11-K22 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK11K33cross, title="K11-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK11K44cross, title="K11-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK11K55cross, title="K11-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema1crosscolour, textcolor=emacrossmarkerBorder)
+plotshape(plotK22K33cross, title="K22-K33 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema22crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK22K44cross, title="K22-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK22K55cross, title="K22-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema2crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK33K44cross, title="K33-K44 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK33K55cross, title="K33-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK44K55cross, title="K44-K55 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
+// plotshape(plotK3K2cross, title="K3-K2 Cross", style=shape.circle, location=location.abovebar, size=size.tiny, color=ema3crosscolour, textcolor=emacrossmarkerBorder)
 
-//─────────────────────────────────────────────
-// TRENDLINE REGISTRY (for doji ↔ trendline checks)
-//─────────────────────────────────────────────
-var line[]  trendlines  = array.new_line()
-var float[] trend_yLow  = array.new_float()
-var float[] trend_yHigh = array.new_float()
+//────────────────────────────────────────────
+// TRENDLINE REGISTRIES (dynamically created, one per originating event id).
+// Efficiency note: on every bar we only
+// need (a) each line's CURRENT price at bar_index, and (b) whether it is
+// currently intersecting another line in its OWN registry. We no longer
+// store/scan static creation-time yLow/yHigh bounds; instead we cache a
+// live current-price + previous-price per line and detect intersections
+// via a sign-flip test against the prior bar — O(n) update, O(n²) only
+// within a single (small) registry for the intra-registry cross check.
+//────────────────────────────────────────────
+// Registries are created lazily: any positive integer index passed to
+// f_getTrendlineRegistry() grows the container on demand, so there is no
+// hardcoded limit on the number of registries (one per f_pairLines id).
+// Pine does not support arrays of arrays directly, so each registry is a
+// UDT instance holding its five tracking arrays plus its line colour.
+type TrendReg
+    line[]  lines
+    float[] curr
+    float[] prev
+    float[] xPrice
+    bool[]  xing
+    color   col
 
-f_registerTrendline(ln) =>
-    y1 = line.get_y1(ln)
-    y2 = line.get_y2(ln)
-    array.push(trendlines, ln)
-    array.push(trend_yLow,  math.min(y1, y2))
-    array.push(trend_yHigh, math.max(y1, y2))
+var array<TrendReg> regAll = array.new<TrendReg>()
+
+// Grows the registry container up to _regIndex and returns the
+// (lines, currPrice, prevPrice, xPrice, isXing) array tuple for it.
+f_getTrendlineRegistry(int _regIndex) =>
+    while array.size(regAll) < _regIndex
+        array.push(regAll, TrendReg.new(array.new_line(), array.new_float(), array.new_float(), array.new_float(), array.new_bool(), color.white))
+    reg = array.get(regAll, _regIndex - 1)
+    [reg.lines, reg.curr, reg.prev, reg.xPrice, reg.xing]
+
+// Stores the colour used by a registry's lines (used for the intersection
+// boxes of registries beyond the six colour inputs).
+f_setTrendlineRegistryColour(int _regIndex, color _col) =>
+    f_getTrendlineRegistry(_regIndex)
+    reg = array.get(regAll, _regIndex - 1)
+    reg.col := _col
+
+f_registerTrendline(ln, int _regIndex) =>
+    [regLines, regCurr, regPrev, regXPrice, regXing] = f_getTrendlineRegistry(_regIndex)
+    array.push(regLines, ln)
+    array.push(regCurr,  line.get_price(ln, bar_index))
+    array.push(regPrev,  na)
+    array.push(regXPrice, na)
+    array.push(regXing,  false)
     f_trackLine(ln)
 
-//─────────────────────────────────────────────
-// HYBRID PRICE-ONLY INTERSECTION (HTF AGNOSTIC)
-//─────────────────────────────────────────────
-f_dojiIntersectsAnyTrendline(_level, tolPct) =>
+// Call once per bar (per registry) AFTER any new lines were registered for that bar.
+// Updates every line's live current price and flags intra-registry intersections
+// via a sign-flip of (price_i - price_j) between the previous bar and this bar.
+f_updateTrendlineRegistry(int _regIndex) =>
+    [regLines, regCurr, regPrev, regXPrice, regXing] = f_getTrendlineRegistry(_regIndex)
+    sz = array.size(regLines)
+    if sz > 0
+        for i = 0 to sz - 1
+            ln_i = array.get(regLines, i)
+            prevP = array.get(regCurr, i)
+            array.set(regPrev, i, prevP)
+            array.set(regCurr, i, line.get_price(ln_i, bar_index))
+            array.set(regXPrice, i, na)
+            array.set(regXing, i, false)
+        if sz > 1
+            for i = 0 to sz - 2
+                pi_curr = array.get(regCurr, i)
+                pi_prev = array.get(regPrev, i)
+                for j = i + 1 to sz - 1
+                    pj_curr = array.get(regCurr, j)
+                    pj_prev = array.get(regPrev, j)
+                    if not na(pi_prev) and not na(pj_prev) and not na(pi_curr) and not na(pj_curr)
+                        diffPrev = pi_prev - pj_prev
+                        diffCurr = pi_curr - pj_curr
+                        if (diffPrev == 0) or (diffCurr == 0) or (diffPrev > 0 and diffCurr < 0) or (diffPrev < 0 and diffCurr > 0)
+                            crossPrice = diffCurr == 0 ? pi_curr : diffPrev == 0 ? pi_prev : pi_prev + (pi_curr - pi_prev) * (diffPrev / (diffPrev - diffCurr))
+                            array.set(regXPrice, i, crossPrice)
+                            array.set(regXPrice, j, crossPrice)
+                            array.set(regXing, i, true)
+                            array.set(regXing, j, true)
+
+// Call once per bar, after all f_registerTrendline calls for that bar, to refresh
+// live prices / intersection flags across every registry created so far.
+f_updateAllTrendlineRegistries() =>
+    regCount = array.size(regAll)
+    if regCount > 0
+        for i = 1 to regCount
+            f_updateTrendlineRegistry(i)
+
+// Returns true if ANY line in the given registry is currently intersecting
+// another line within that same registry, on the current bar.
+f_registryHasIntersection(int _regIndex) =>
+    [regLines, regCurr, regPrev, regXPrice, regXing] = f_getTrendlineRegistry(_regIndex)
+    sz = array.size(regXing)
+    hit = false
+    if sz > 0
+        for i = 0 to sz - 1
+            if array.get(regXing, i)
+                hit := true
+    hit
+
+//────────────────────────────────────────────
+// HYBRID PRICE-ONLY LEVEL CHECK (HTF AGNOSTIC)
+// Compares _level against each line's LIVE current price (not static bounds).
+// _regIndex selects which of the 6 trendline registries (1-6) to scan.
+//────────────────────────────────────────────
+f_dojiIntersectsAnyTrendline(_level, tolPct, int _regIndex) =>
     if na(_level)
         false
     else
-        sz = array.size(trendlines)
+        [regLines, regCurr, regPrev, regXPrice, regXing] = f_getTrendlineRegistry(_regIndex)
+        sz = array.size(regCurr)
         if sz == 0
             false
         else
             hit = false
             for i = 0 to sz - 1
-                yLow  = array.get(trend_yLow,  i)
-                yHigh = array.get(trend_yHigh, i)
-                tolAbs = (yHigh - yLow) * tolPct / 100.0
-                if _level >= (yLow - tolAbs) and _level <= (yHigh + tolAbs)
-                    hit := true
+                price = array.get(regCurr, i)
+                if not na(price)
+                    tolAbs = math.abs(price) * tolPct / 100.0
+                    if _level >= (price - tolAbs) and _level <= (price + tolAbs)
+                        hit := true
             hit
 
-//─────────────────────────────────────────────
+f_trendIntersectionRegEnabled(int _regIndex) =>
+    switch _regIndex
+        1 => showTrendlineIntersectionReg1
+        2 => showTrendlineIntersectionReg2
+        3 => showTrendlineIntersectionReg3
+        4 => showTrendlineIntersectionReg4
+        5 => showTrendlineIntersectionReg5
+        6 => showTrendlineIntersectionReg6
+        // Registries beyond the six inputs are always enabled.
+        => true
+
+f_trendIntersectionRegColour(int _regIndex) =>
+    switch _regIndex
+        1 => trendlineIntersectionColourReg1
+        2 => trendlineIntersectionColourReg2
+        3 => trendlineIntersectionColourReg3
+        4 => trendlineIntersectionColourReg4
+        5 => trendlineIntersectionColourReg5
+        6 => trendlineIntersectionColourReg6
+        // Registries beyond the six inputs use the colour stored at the f_pairLines call site.
+        => _regIndex >= 1 and _regIndex <= array.size(regAll) ? array.get(regAll, _regIndex - 1).col : color.white
+
+f_drawTrendlineIntersectionBoxAtPrice(float _intersectionPrice, color _col) =>
+    candleRangeTrendBox = high - low
+    ocPctTrendBox = candleRangeTrendBox > 0 ? math.abs(close - open) / candleRangeTrendBox * 100.0 : 100.0
+    isDojiTrendBox = filterDojiTrendlineIntersectionBox and (ocPctTrendBox < trendlineIntersectionDojiOCpct)
+    didDrawTrendBox = false
+    if drawTrendlineIntersectionRectangles and not isDojiTrendBox and not na(_intersectionPrice)
+        bodyTop = math.max(open, close)
+        bodyBot = math.min(open, close)
+        distHigh = math.abs(high - _intersectionPrice)
+        distLow = math.abs(low - _intersectionPrice)
+        distOpen = math.abs(open - _intersectionPrice)
+        distClose = math.abs(close - _intersectionPrice)
+        farthestWickIsHigh = distHigh >= distLow
+        closestWickIsHigh = distHigh <= distLow
+        farthestBody = distOpen >= distClose ? open : close
+        closestBody = distOpen <= distClose ? open : close
+        newTop = trendlineIntersectionRectangleOrigin == "Far Wick" ? math.max(farthestWickIsHigh ? high : low, farthestBody) : trendlineIntersectionRectangleOrigin == "Near Wick" ? math.max(closestWickIsHigh ? high : low, closestBody) : trendlineIntersectionRectangleOrigin == "High/Low" ? high : bodyTop
+        newBot = trendlineIntersectionRectangleOrigin == "Far Wick" ? math.min(farthestWickIsHigh ? high : low, farthestBody) : trendlineIntersectionRectangleOrigin == "Near Wick" ? math.min(closestWickIsHigh ? high : low, closestBody) : trendlineIntersectionRectangleOrigin == "High/Low" ? low : bodyBot
+        if drawTrendIntersectionRectanglesOverlapping
+            // Overlap checking disabled: draw the rectangle unconditionally.
+            // It is not registered in the trend-intersection overlap registry,
+            // so it never blocks, or is blocked by, other intersection rectangles.
+            // It uses the existing overlapping-zone pool to stay within drawing limits.
+            f_trackOverlappingCrossZone(newTop, newBot, _col)
+            didDrawTrendBox := true
+        else
+            if not f_trendZoneOverlapsRegistry(newTop, newBot)
+                f_trackTrendIntersectionZone(newTop, newBot, _col)
+                didDrawTrendBox := true
+    didDrawTrendBox
+
+f_drawTrendlineIntersectionBoxesForRegistry(int _regIndex) =>
+    didDrawForReg = false
+    if drawTrendlineIntersectionRectangles and f_trendIntersectionRegEnabled(_regIndex)
+        [regLines, regCurr, regPrev, regXPrice, regXing] = f_getTrendlineRegistry(_regIndex)
+        sz = array.size(regCurr)
+        if sz > 0
+            regCol = f_trendIntersectionRegColour(_regIndex)
+            for i = 0 to sz - 1
+                if array.get(regXing, i)
+                    didDrawForReg := f_drawTrendlineIntersectionBoxAtPrice(array.get(regXPrice, i), regCol) or didDrawForReg
+    didDrawForReg
+
+f_drawAllTrendlineIntersectionBoxes() =>
+    regCount = array.size(regAll)
+    if regCount > 0
+        for i = 1 to regCount
+            f_drawTrendlineIntersectionBoxesForRegistry(i)
+
+//────────────────────────────────────────────
 // Unified line-pairing function with optional mid-line
-//─────────────────────────────────────────────
+//────────────────────────────────────────────
+// The _id passed to f_pairLines() is used directly as the trendline registry
+// index: any positive integer gets its own pending pair slot and its own
+// lazily-created registry, so there is no hardcoded limit on the number of
+// pair/event combinations.
 f_pairLines(int _id, bool _event, float _low, float _high, float _mid, color _col) =>
     var int[]   firstBar   = array.new_int()
     var float[] firstLow   = array.new_float()
@@ -563,6 +1174,8 @@ f_pairLines(int _id, bool _event, float _low, float _high, float _mid, color _co
     fh  = array.get(firstHigh, _id)
     fm  = array.get(firstMid,  _id)
 
+    regIndex = _id
+
     if _event
         if na(fb)
             array.set(firstBar,  _id, bar_index)
@@ -572,41 +1185,67 @@ f_pairLines(int _id, bool _event, float _low, float _high, float _mid, color _co
         else
             x1 = fb
             x2 = bar_index
+            ext = emaTrendlineExtendRight ? extend.right : extend.both
 
-            lnLow  = line.new(x1, fl, x2, _low,  xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=extend.both)
-            f_registerTrendline(lnLow)
-            lnHigh = line.new(x1, fh, x2, _high, xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=extend.both)
-            f_registerTrendline(lnHigh)
+            lnLow  = line.new(x1, fl, x2, _low,  xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=ext)
+            f_registerTrendline(lnLow, regIndex)
+            lnHigh = line.new(x1, fh, x2, _high, xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=ext)
+            f_registerTrendline(lnHigh, regIndex)
 
             if not na(fm) and not na(_mid)
-                lnMid = line.new(x1, fm, x2, _mid, xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=extend.both)
-                f_registerTrendline(lnMid)
+                lnMid = line.new(x1, fm, x2, _mid, xloc=xloc.bar_index, width=1, color=_col, style=line.style_solid, extend=ext)
+                f_registerTrendline(lnMid, regIndex)
+
+            f_setTrendlineRegistryColour(regIndex, _col)
 
             array.set(firstBar,  _id, na)
             array.set(firstLow,  _id, na)
             array.set(firstHigh, _id, na)
             array.set(firstMid,  _id, na)
 
-crossEvent4 = ta.cross(K11EMA, K22EMA) // PERFECT
-crossEvent5 = ta.cross(K22EMA, K33EMA)
-crossEvent6 = ta.cross(K1EMA, K2EMA)
-crossEvent7 = ta.cross(K33EMA, K3EMA) or ta.cross(K33EMA, K3Upper) or ta.cross(K33EMA, K3Lower)
-crossEvent8 = ta.cross(K33EMA, K11EMA) or ta.cross(K33EMA, K11Upper) or ta.cross(K33EMA, K11Lower)
-crossEvent9 = ta.cross(K33EMA, K2EMA) or ta.cross(K33EMA, K2Upper) or ta.cross(K33EMA, K2Lower)
 
 
 if (drawEMAlines)
-    f_pairLines(0, crossEvent4, K22Lower, K22Upper, na, ema1colour)
-    f_pairLines(1, crossEvent5, K22Lower, K22Upper, na, ema3colour)
-    f_pairLines(2, crossEvent6, K2Lower, K2Upper, na, ema2colour)
-    f_pairLines(3, crossEvent8, K11Lower, K11Upper, na, ema3colour)
-    f_pairLines(4, crossEvent9, K22Lower, K22Lower, na, ema2colour)
+
+    crossEvent1 = (ta.cross(K1EMA, K3EMA)) and (showEMAtrendK1K3)
+    crossEvent2 = (ta.cross(K2EMA, K3EMA)) and (showEMAtrendK2K3)
+    crossEvent4 = (ta.cross(K11EMA, K22EMA)) and (showEMAtrendK11K22) // PERFECT
+    crossEvent5 = (ta.cross(K22EMA, K33EMA)) and (showEMAtrendK22K33)
+    crossEvent6 = (ta.cross(K1EMA, K2EMA)) and (showEMAtrendK1K2)
+    crossEvent7 = (ta.cross(K33EMA, K3EMA) or ta.cross(K33EMA, K3Upper) or ta.cross(K33EMA, K3Lower))  and (showEMAtrendK3K33)
+    crossEvent8 = (ta.cross(K33EMA, K11EMA) or ta.cross(K33EMA, K11Upper) or ta.cross(K33EMA, K11Lower)) and (showEMAtrendK11K33)
+    crossEvent9 = (ta.cross(K33EMA, K2EMA) or ta.cross(K33EMA, K2Upper) or ta.cross(K33EMA, K2Lower)) and (showEMAtrendK2K33)
+    crossEvent10 = (ta.cross(K44EMA, K4EMA) or ta.cross(K44EMA, K4Upper) or ta.cross(K44EMA, K4Lower)) and (showEMAtrendK4K44)
+
+    crossEvent11 = (ta.cross(K11EMA, K1EMA)) and (showEMAtrendK1K11)
+    crossEvent12 = (ta.cross(K22EMA, K2EMA)) and (showEMAtrendK2K22)
+    crossEvent13 = (ta.cross(K33EMA, K3EMA)) and (showEMAtrendK3K33)
+    crossEvent14 = (ta.cross(K44EMA, K4EMA)) and (showEMAtrendK4K44)
+    crossEvent15 = (ta.cross(K55EMA, K5EMA)) and (showEMAtrendK5K55)
+    crossEvent16 = (ta.cross(K66EMA, K6EMA)) and (showEMAtrendK6K66)
+
+
+    //TODO: Jason:modify function to allow for 4x band inputs (uppers and lowers, two pairs)
+    f_pairLines(7, crossEvent6, K2Lower, K2Upper, na, ema1colour)   // K1–K2
+    //f_pairLines(8, crossEvent1, K11Lower, K11Upper, na, ema3colour) // K1–K3
+    //f_pairLines(9, crossEvent2, K11Lower, K11Upper, na, ema3colour) // K2–K3
+
+    f_pairLines(1, crossEvent11, K11Lower, K11Upper, na, ema1colour)  // K1–K11
+    f_pairLines(2, crossEvent12, K22Lower, K22Upper, na, ema2colour)  // K2–K22
+    f_pairLines(3, crossEvent13, K33Lower, K33Upper, na, ema3colour)  // K3–K33
+    f_pairLines(4, crossEvent14, K44Lower, K44Upper, na, ema4colour)  // K4–K44
+    f_pairLines(5, crossEvent15, K55Lower, K55Upper, na, ema5colour)  // K5–K55
+    f_pairLines(6, crossEvent16, K66Lower, K66Upper, na, ema3colour)  // K6–K66
+
+    f_updateAllTrendlineRegistries()
+    f_drawAllTrendlineIntersectionBoxes()
 
 
 
-//f_pairLines(5, crossK2topK1top, K2Upper, K2Upper, na, rangeboundcolour)
-//f_pairLines(6, crossK2topK1top, K1EMA, K1EMA, na, rangeboundcolour)
-//f_pairLines(7, crossK2topK1top, K2EMA, K2EMA, na, rangeboundcolour)
+
+//f_pairLines(7, crossK2topK1top, K2Upper, K2Upper, na, rangeboundcolour)
+//f_pairLines(8, crossK2topK1top, K1EMA, K1EMA, na, rangeboundcolour)
+//f_pairLines(9, crossK2topK1top, K2EMA, K2EMA, na, rangeboundcolour)
 
 
 if (crossK2topK1top) and (drawSRred) // (canPlotK2topK1top)
@@ -769,12 +1408,11 @@ barcolor(foundDoji6 ? showDoji6color : na)
 
 
 // BAND ORDER CONDITION (true when K5 is outermost, K22 middle, K2 innermost)
-topSideOrder   = (K5Upper > K22Upper and K22Upper > K2Upper)
-bottomSideOrder = (K5Lower < K22Lower and K22Lower < K2Lower)
+topSideOrder   = (K5Upper > K22Upper) and (K22Upper > K2Upper)
+bottomSideOrder = (K5Lower < K22Lower) and (K22Lower < K2Lower)
 
-// SERIES CONTROL — ensures only ONE label per continuous stretch
-var bool inWarningSeries = false
-var bool inShiftiesSeries = false
+// Shared warning counter (fed by the primary-TF imbalance logic below;
+// read by every f_pullbackSignals() instance).
 var int warningCounter = 0
 
 // Alert flags
@@ -785,48 +1423,73 @@ var bool alertPullbackBottom = false
 alertcondition(alertPullbackTop, title = "Pullback Warning (SELL)", message = "PULLBACK WARNING: SELL SIGNAL")
 alertcondition(alertPullbackBottom, title = "Pullback Warning (BUY)", message = "PULLBACK WARNING: BUY SIGNAL")
 
-// Reset alert flags each bar
-//alertPullbackTop    := false
-//alertPullbackBottom := false
+//─────────────────────────────────────────────
+// PULLBACK / SHIFTIES LABEL ENGINE (reusable)
+// _topOrder/_botOrder : band-order booleans for this instance
+// _active             : evaluation gate — pass `true` for live (chart-TF)
+//                       behaviour, or a "new HTF candle" flag for HTF-secure
+//                       confirmed-only signals
+// _tag                : string appended to label text + alert message
+// NOTE: `var` state inside this function is INDEPENDENT PER CALL SITE,
+//       so adding another timeframe/pair is just one more call.
+// Returns [firedTop, firedBottom, inShifties]
+//─────────────────────────────────────────────
+f_pullbackSignals(_topOrder, _botOrder, _active, _tag) =>
+    var bool inWarningSeries  = false
+    var bool inShiftiesSeries = false
+    firedTop    = false
+    firedBottom = false
+    if _active
+        // ENTERING A VALID SERIES (first time condition is true)
+        if (_topOrder and drawPullbacks) and not (inWarningSeries)
+            // Only show label if enough warnings have accumulated
+            if warningCounter >= 1
+                f_trackLabel(label.new(bar_index, close, "* PULLBACK * " + _tag, xloc=xloc.bar_index, yloc=yloc.abovebar, color=color.new(#ff0000, 0), textcolor=color.white, style=label.style_label_down, size=size.normal, text_formatting=text.format_bold))
+                inWarningSeries := true
+                firedTop := true
+                alert("PULLBACK_WARNING " + _tag, alert.freq_all)
+        if (_botOrder and drawPullbacks) and not (inWarningSeries)
+            if warningCounter >= 1
+                f_trackLabel(label.new(bar_index, close, "* PULLBACK * " + _tag, xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.new(#00ff08, 0), textcolor=color.white, style=label.style_label_up, size=size.normal, text_formatting=text.format_bold))
+                inWarningSeries := true
+                firedBottom := true
+                alert("PULLBACK_WARNING " + _tag, alert.freq_all)
+        if (_botOrder or _topOrder) and (drawShifties)
+            // My shifties
+            if warningCounter < 1
+                if not inShiftiesSeries
+                    f_trackLabel(label.new(bar_index, close, "Shift " + _tag, xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.rgb(255,100,0), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal))
+                    inShiftiesSeries := true
+                firedTop    := true
+                firedBottom := true
+                alert("PULLBACK_WARNING " + _tag, alert.freq_all)
+        // EXITING THE SERIES
+        if not (_topOrder or _botOrder) and inWarningSeries
+            inWarningSeries := false
+        if not (_topOrder or _botOrder) and inShiftiesSeries
+            inShiftiesSeries := false
+    [firedTop, firedBottom, inShiftiesSeries]
 
-// ENTERING A VALID SERIES (first time condition is true)
-if (topSideOrder and drawPullbacks and not inWarningSeries)
-    // Only show label if enough warnings have accumulated
-    if warningCounter >= 1
-        f_trackLabel(label.new(bar_index, close, "* PULLBACK *", xloc=xloc.bar_index, yloc=yloc.abovebar, color=color.new(#ff0000, 0), textcolor=color.white, style=label.style_label_down, size=size.normal, text_formatting=text.format_bold))
-        inWarningSeries := true
-        alertPullbackTop := true
-        //alert("TYPE: *SELL*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
-        alert("PULLBACK_WARNING", alert.freq_all)
+// TF1 — live evaluation on every chart bar (original behaviour)
+tf1Tag = "(" + (selectedperiod1 == "" ? "chart" : selectedperiod1) + ")"
+[firedTop1, firedBottom1, inShifties1] = f_pullbackSignals(topSideOrder, bottomSideOrder, true, tf1Tag)
 
-if (bottomSideOrder and drawPullbacks and not inWarningSeries)
-    // Only show label if enough warnings have accumulated
-    if warningCounter >= 1
-        f_trackLabel(label.new(bar_index, close, "* PULLBACK *", xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.new(#00ff08, 0), textcolor=color.white, style=label.style_label_up, size=size.normal, text_formatting=text.format_bold))
-        inWarningSeries := true
-        alertPullbackBottom := true
-        //alert("TYPE: *BUY*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
-        alert("PULLBACK_WARNING", alert.freq_all)
+// TF2 — HTF-secure: evaluate only when a new selectedperiod1b candle opens,
+// using the just-CLOSED candle's band values ([1]).
+topSideOrder2    = (K5Upper[1] > K22Upper[1]) and (K22Upper[1] > K2Upperb[1])
+bottomSideOrder2 = (K5Lower[1] < K22Lower[1]) and (K22Lower[1] < K2Lowerb[1])
+[firedTop2, firedBottom2, inShifties2] = f_pullbackSignals(topSideOrder2, bottomSideOrder2, newTF2bar, "(" + selectedperiod1b + ")")
 
-if (bottomSideOrder or topSideOrder) and (drawShifties) // and (candleDoji2)
-    // My shifties
-    if warningCounter < 1
-        if not inShiftiesSeries
-            f_trackLabel(label.new(bar_index, close, "Shift", xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.rgb(255,100,0), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal))
-            inShiftiesSeries := true
-        alertPullbackTop := true
-        alertPullbackBottom := true
-        //alert("Type: *TESTING*, TICKER:" + syminfo.ticker + ", PRICE:" + str.tostring(open), alert.freq_all)
-        alert("PULLBACK_WARNING", alert.freq_all)
+// ── ADD MORE TIMEFRAME/PAIR INSTANCES HERE ──
+// 1. fetch the band set (f_fetchKC) if it doesn't exist yet
+// 2. compute topSide/bottomSide booleans
+// 3. add one f_pullbackSignals(...) call
+// 4. OR its fired flags into the alert flags below
 
-// EXITING THE SERIES
-if not (topSideOrder or bottomSideOrder) and inWarningSeries
-    inWarningSeries := false
+alertPullbackTop    := firedTop1    or firedTop2
+alertPullbackBottom := firedBottom1 or firedBottom2
 
-if not (topSideOrder or bottomSideOrder) and inShiftiesSeries
-    inShiftiesSeries := false
-
-barcolor(inShiftiesSeries ? drawShiftiesColor : na)
+barcolor(inShifties1 or inShifties2 ? drawShiftiesColor : na)
 
 
 
@@ -862,7 +1525,7 @@ if (isFirstImbalance and drawImbalance1) and not ((topSideOrder and K4Upper < K1
     line.set_extend(emaLine, extend.right)
     f_trackLine(emaLine)
 
-if (isFirstImbalance and drawImbalance1) and ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
+if (isFirstImbalance and drawImbalance2) and ((topSideOrder and K4Upper < K1Upper) or (bottomSideOrder and K4Lower > K1Lower))
     dateLabel := label.new(bar_index, nearestEMA, str.tostring(jasonDateTime) + ": (STRONG) " + f_formatCurrency(nearestEMA), xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_right, textcolor=#ffffff, color=#8b02e6, size=size.normal, text_formatting=text.format_bold)
     f_trackLabel(dateLabel)
     f_trackLine(line.new(bar_index, close,     bar_index,   nearestEMA, xloc=xloc.bar_index, width=3, color=orderblockcolour2, style=line.style_solid))
