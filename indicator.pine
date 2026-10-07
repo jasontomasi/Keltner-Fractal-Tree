@@ -56,8 +56,8 @@ dojiRaysWeekly = color.new(#EFBF04, 0)
 
 // Primary Keltner timeframes
 // options = ["5", "15", "30", "60", "240", "D", "2D", "W", "M", "12M"],
-selectedperiod1  = input.timeframe("W",  "Timeframe for Keltner Calculations", group='TIMEFRAMES')
-selectedperiod1b = input.timeframe("2D", "--> 2nd Timeframe for locating pullbacks", group='TIMEFRAMES')
+selectedperiod1  = input.timeframe("2D",  "Timeframe for Keltner Calculations", group='TIMEFRAMES')
+selectedperiod1b = input.timeframe("W", "--> 2nd Timeframe for locating pullbacks", group='TIMEFRAMES')
 selectedperiod2  = input.timeframe("D",  "Timeframe for Trendline mapping",    group='TIMEFRAMES')
 selectedperiod3  = input.timeframe("2D", "Timeframe for K4 line",              group='TIMEFRAMES')
 selectedperiod4  = input.timeframe("2D", "Timeframe for K5 line",              group='TIMEFRAMES')
@@ -89,13 +89,13 @@ drawSRred = input.bool(false, "Show S/R (red lines)?", group='VISUALS')
 drawSRredDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.01, group='VISUALS')
 drawSRgreen = input.bool(true, "Show S/R (green lines)?", group='VISUALS')
 drawSRgreenDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.1, group='VISUALS')
-drawSRorange = input.bool(true, "Show S/R (green lines)?", group='VISUALS')
-drawSRorangeDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.1, group='VISUALS')
+// drawSRorange = input.bool(true, "Show S/R (green lines)?", group='VISUALS')
+// drawSRorangeDedup = input.float(1.9, "---> Deduplication proximity (%)", minval=0.0, maxval=100.0, step=0.1, group='VISUALS')
 
-drawImbalance1  = input.bool(true, "Show imbalance lines (Weak)?", group='VISUALS')
-drawImbalance2  = input.bool(true, "Show imbalance lines (Strong)?", group='VISUALS')
+drawImbalance1  = input.bool(false, "Show imbalance lines (Weak)?", group='VISUALS')
+drawImbalance2  = input.bool(true,  "Show imbalance lines (Strong)?", group='VISUALS')
 
-drawEMAlines  = input.bool(true, "Show trendlines?", group='EMA Trendlines')
+drawEMAlines  = input.bool(false, "Show trendlines?", group='EMA Trendlines')
 emaTrendlineExtendRight = input.bool(true, "---> Extend onward only (off = extend both)", group='EMA Trendlines')
 
 showEMAtrendK2K3   = input.bool(false, "K2-K3",  group='EMA Trendlines', inline='row1')
@@ -171,6 +171,9 @@ crossBoxDojiOCpct  = input.float(60.0, "---> Doji OC% threshold (body/range)", m
 drawKbands    = input.bool(false, "Show K-bands?", group='VISUALS')
 drawEMAs      = input.bool(false, "Show EMAs?", group='VISUALS')
 drawShifties  = input.bool(true,  "Show Shifties?", group='VISUALS')
+shiftiesTF    = input.string("Both", "Shifties Timeframes", options=["Timeframe 1", "Timeframe 2", "Both"], group='VISUALS', tooltip="Which timeframe's Shifties labels/bar-coloring to display. Timeframe 1 = Keltner Calculations TF, Timeframe 2 = pullback TF. Alerts are unaffected.")
+showShiftTF1  = shiftiesTF != "Timeframe 2"
+showShiftTF2  = shiftiesTF != "Timeframe 1"
 drawShiftiesColor = input.color(color.new(#F52727, 0), "Shifties Color", group='VISUALS')
 drawPullbacks = input.bool(true, "Show Pullbacks?", group='VISUALS')
 
@@ -280,6 +283,11 @@ f_fetchKC(_tf, _period, _mult) =>
 [K2EMAb, K2Upperb, K2Lowerb] = f_fetchKC(selectedperiod1b, ema2_period, ema2_multi)
 tf2Time   = request.security(syminfo.tickerid, selectedperiod1b, time, lookahead=barmerge.lookahead_off)
 newTF2bar = tf2Time != tf2Time[1]
+// New-candle flag for selectedperiod1 — used so the TF1 pullback/shifties
+// instance evaluates on confirmed (closed) candles, symmetric with TF2.
+// This makes selectedperiod1 and selectedperiod1b fully interchangeable.
+tf1Time   = request.security(syminfo.tickerid, selectedperiod1, time, lookahead=barmerge.lookahead_off)
+newTF1bar = tf1Time != tf1Time[1]
 [K3EMA,  K3Upper,  K3Lower]  = f_fetchKC(selectedperiod1, ema3_period, ema3_multi)
 [K4EMA,  K4Upper,  K4Lower]  = f_fetchKC(selectedperiod3, ema4_period, ema4_multi)
 [K5EMA,  K5Upper,  K5Lower]  = f_fetchKC(selectedperiod4, ema5_period, ema5_multi)
@@ -626,36 +634,44 @@ f_drawOrderedZone(color _col, float _band1, float _band2, float _band3, float _b
     didDrawOrderedZone
 
 
-// Definitions for marking candles where K-bands appear in desired order (matched downwards). Eights inputs must be specified, so fill any used slots with the text string "na"
 
-//bandOrder1  = f_drawOrderedZone(color.new(#AD46FF, 0), K66Upper, K6Upper, K55Upper, K5Upper, na, na, na, na)
-//bandOrder2  = f_drawOrderedZone(color.new(#AD46FF, 0), K5Lower, K55Lower, K6Lower, K66Lower, na, na, na, na)
-//bandOrder3  = f_drawOrderedZone(color.new(#AD46FF, 0), K5Lower, K55Lower, K6Lower, K66Lower, na, na, na, na)
+if (drawOrderedZones)
+    // Definitions for marking candles where K-bands appear in desired order (matched downwards). Eights inputs must be specified, so fill any used slots with the text string "na"
 
-bandOrder4  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K3Upper, na, na, na, na, na, na)
-bandOrder5  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K3Lower, na, na, na, na, na, na)
-bandOrder6  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K33Upper, na, na, na, na, na, na)
-bandOrder7  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K33Lower, na, na, na, na, na, na)
+    //bandOrder1  = f_drawOrderedZone(color.new(#AD46FF, 0), K66Upper, K6Upper, K55Upper, K5Upper, na, na, na, na)
+    //bandOrder2  = f_drawOrderedZone(color.new(#AD46FF, 0), K5Lower, K55Lower, K6Lower, K66Lower, na, na, na, na)
+    //bandOrder3  = f_drawOrderedZone(color.new(#AD46FF, 0), K5Lower, K55Lower, K6Lower, K66Lower, na, na, na, na)
 
-bandOrder8  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K3Upper, na, na, na, na, na, na)
-bandOrder9  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K3Lower, na, na, na, na, na, na)
-bandOrder10 = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K33Upper, na, na, na, na, na, na)
-bandOrder11 = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K33Lower, na, na, na, na, na, na)
+    //bandOrder4  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K3Upper, na, na, na, na, na, na)
+    //bandOrder5  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K3Lower, na, na, na, na, na, na)
+    //bandOrder6  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K33Upper, na, na, na, na, na, na)
+    //bandOrder7  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Upper, K33Lower, na, na, na, na, na, na)
 
-bandOrder12 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K3Upper, na, na, na, na, na, na)
-bandOrder13 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K3Lower, na, na, na, na, na, na)
-bandOrder14 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K33Upper, na, na, na, na, na, na)
-bandOrder15 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K33Lower, na, na, na, na, na, na)
+    //bandOrder8  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K3Upper, na, na, na, na, na, na)
+    //bandOrder9  = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K3Lower, na, na, na, na, na, na)
+    //bandOrder10 = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K33Upper, na, na, na, na, na, na)
+    //bandOrder11 = f_drawOrderedZone(color.new(#00E4E8, 0), K5Lower, K33Lower, na, na, na, na, na, na)
 
-bandOrder16 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K3Upper, na, na, na, na, na, na)
-bandOrder17 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K3Lower, na, na, na, na, na, na)
-bandOrder18 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K33Upper, na, na, na, na, na, na)
-bandOrder19 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K33Lower, na, na, na, na, na, na)
+    //bandOrder12 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K3Upper, na, na, na, na, na, na)
+    //bandOrder13 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K3Lower, na, na, na, na, na, na)
+    //bandOrder14 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K33Upper, na, na, na, na, na, na)
+    //bandOrder15 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Upper, K33Lower, na, na, na, na, na, na)
 
-bandOrder20 = f_drawOrderedZone(color.new(#FFFFFF, 0), K5Upper, K55Upper, na, na, na, na, na, na)
-bandOrder21 = f_drawOrderedZone(color.new(#FFFFFF, 0), K5Upper, K55Lower, na, na, na, na, na, na)
-bandOrder22 = f_drawOrderedZone(color.new(#27EEF5, 0), K3Upper, K33Upper, na, na, na, na, na, na)
-bandOrder23 = f_drawOrderedZone(color.new(#27EEF5, 0), K3Upper, K33Lower, na, na, na, na, na, na)
+    //bandOrder16 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K3Upper, na, na, na, na, na, na)
+    //bandOrder17 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K3Lower, na, na, na, na, na, na)
+    //bandOrder18 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K33Upper, na, na, na, na, na, na)
+    //bandOrder19 = f_drawOrderedZone(color.new(#00E4E8, 0), K55Lower, K33Lower, na, na, na, na, na, na)
+
+    //bandOrder20 = f_drawOrderedZone(color.new(#FFFFFF, 0), K5Upper, K55Upper, na, na, na, na, na, na)
+    //bandOrder21 = f_drawOrderedZone(color.new(#FFFFFF, 0), K5Upper, K55Lower, na, na, na, na, na, na)
+    //bandOrder22 = f_drawOrderedZone(color.new(#27EEF5, 0), K3Upper, K33Upper, na, na, na, na, na, na)
+    //bandOrder23 = f_drawOrderedZone(color.new(#27EEF5, 0), K3Upper, K33Lower, na, na, na, na, na, na)
+
+    bandOrder24 = f_drawOrderedZone(color.new(#FF0000, 0), K4Upper, K44Upper, na, na, na, na, na, na)
+    bandOrder25 = f_drawOrderedZone(color.new(#FF0000, 0), K4Upper, K44Lower, na, na, na, na, na, na)
+
+    bandOrder26 = f_drawOrderedZone(color.new(#FF0000, 0), K4Lower, K44Upper, na, na, na, na, na, na)
+    bandOrder27 = f_drawOrderedZone(color.new(#FF0000, 0), K4Lower, K44Lower, na, na, na, na, na, na)
 
 
 
@@ -1237,6 +1253,13 @@ if (drawEMAlines)
     f_pairLines(5, crossEvent15, K55Lower, K55Upper, na, ema5colour)  // K5–K55
     f_pairLines(6, crossEvent16, K66Lower, K66Upper, na, ema3colour)  // K6–K66
 
+    f_pairLines(7, crossEvent4, K11Lower, K22Upper, na, ema3colour)  // K11–K22
+    f_pairLines(8, crossEvent4, K11Upper, K22Lower, na, ema3colour)  // K11–K22
+
+    f_pairLines(9,  crossEvent5, K22Lower, K33Upper, na, ema3colour)  // K22–K33
+    f_pairLines(10, crossEvent5, K22Upper, K33Lower, na, ema3colour)  // K22–K22
+
+
     f_updateAllTrendlineRegistries()
     f_drawAllTrendlineIntersectionBoxes()
 
@@ -1434,7 +1457,7 @@ alertcondition(alertPullbackBottom, title = "Pullback Warning (BUY)", message = 
 //       so adding another timeframe/pair is just one more call.
 // Returns [firedTop, firedBottom, inShifties]
 //─────────────────────────────────────────────
-f_pullbackSignals(_topOrder, _botOrder, _active, _tag) =>
+f_pullbackSignals(_topOrder, _botOrder, _active, _tag, _showShifties) =>
     var bool inWarningSeries  = false
     var bool inShiftiesSeries = false
     firedTop    = false
@@ -1458,7 +1481,8 @@ f_pullbackSignals(_topOrder, _botOrder, _active, _tag) =>
             // My shifties
             if warningCounter < 1
                 if not inShiftiesSeries
-                    f_trackLabel(label.new(bar_index, close, "Shift " + _tag, xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.rgb(255,100,0), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal))
+                    if _showShifties
+                        f_trackLabel(label.new(bar_index, close, "Shift " + _tag, xloc=xloc.bar_index, yloc=yloc.belowbar, color=color.rgb(255,100,0), textcolor=color.rgb(0, 0, 0), style=label.style_label_up, size=size.normal))
                     inShiftiesSeries := true
                 firedTop    := true
                 firedBottom := true
@@ -1470,15 +1494,19 @@ f_pullbackSignals(_topOrder, _botOrder, _active, _tag) =>
             inShiftiesSeries := false
     [firedTop, firedBottom, inShiftiesSeries]
 
-// TF1 — live evaluation on every chart bar (original behaviour)
+// TF1 — HTF-secure: evaluate only when a new selectedperiod1 candle opens,
+// using the just-CLOSED candle's band values ([1]). Symmetric with TF2, so
+// swapping selectedperiod1 <-> selectedperiod1b produces identical output.
 tf1Tag = "(" + (selectedperiod1 == "" ? "chart" : selectedperiod1) + ")"
-[firedTop1, firedBottom1, inShifties1] = f_pullbackSignals(topSideOrder, bottomSideOrder, true, tf1Tag)
+topSideOrder1    = (K5Upper[1] > K22Upper[1]) and (K22Upper[1] > K2Upper[1])
+bottomSideOrder1 = (K5Lower[1] < K22Lower[1]) and (K22Lower[1] < K2Lower[1])
+[firedTop1, firedBottom1, inShifties1] = f_pullbackSignals(topSideOrder1, bottomSideOrder1, newTF1bar, tf1Tag, showShiftTF1)
 
 // TF2 — HTF-secure: evaluate only when a new selectedperiod1b candle opens,
 // using the just-CLOSED candle's band values ([1]).
 topSideOrder2    = (K5Upper[1] > K22Upper[1]) and (K22Upper[1] > K2Upperb[1])
 bottomSideOrder2 = (K5Lower[1] < K22Lower[1]) and (K22Lower[1] < K2Lowerb[1])
-[firedTop2, firedBottom2, inShifties2] = f_pullbackSignals(topSideOrder2, bottomSideOrder2, newTF2bar, "(" + selectedperiod1b + ")")
+[firedTop2, firedBottom2, inShifties2] = f_pullbackSignals(topSideOrder2, bottomSideOrder2, newTF2bar, "(" + selectedperiod1b + ")", showShiftTF2)
 
 // ── ADD MORE TIMEFRAME/PAIR INSTANCES HERE ──
 // 1. fetch the band set (f_fetchKC) if it doesn't exist yet
@@ -1489,7 +1517,7 @@ bottomSideOrder2 = (K5Lower[1] < K22Lower[1]) and (K22Lower[1] < K2Lowerb[1])
 alertPullbackTop    := firedTop1    or firedTop2
 alertPullbackBottom := firedBottom1 or firedBottom2
 
-barcolor(inShifties1 or inShifties2 ? drawShiftiesColor : na)
+barcolor((inShifties1 and showShiftTF1) or (inShifties2 and showShiftTF2) ? drawShiftiesColor : na)
 
 
 
